@@ -141,10 +141,11 @@
     nextTick(() => {
       const el = danmakuListEl.value;
       if (!el) return;
+      // 使用 scrollTo({behavior: 'auto'}) 替代平滑滚动，确保锚点准确
       requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight;
+        el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
         requestAnimationFrame(() => {
-          el.scrollTop = el.scrollHeight; // 双RAF确保强制到底部，减少偶发失效
+          el.scrollTop = el.scrollHeight; // 双重同步确保
         });
       });
     });

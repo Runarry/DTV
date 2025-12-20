@@ -136,12 +136,12 @@ onMounted(() => {
 
 <style scoped>
 .home-page {
-  height: 100vh; /* Occupy full viewport height */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  background: #18181b;
-  min-width: 0; /* Allow layout to shrink on high zoom levels */
+  overflow: hidden;
+  background: transparent;
+  min-width: 0;
 }
 
 .category-section {
@@ -150,14 +150,16 @@ onMounted(() => {
   position: sticky; 
   top: 0;
   width: 100%;
-  background: #18181b; 
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color-light);
 }
 
 .live-list-section {
   flex-grow: 1; 
   overflow: hidden; 
   width: 100%;
-  background: #18181b;
+  background: transparent;
   display: flex; 
   flex-direction: column; 
 }
@@ -167,24 +169,11 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: transparent;
 }
 
 .loading-message {
-  color: #aaa;
+  color: var(--secondary-text);
   font-size: 16px;
-}
-
-/* Day Mode Styles */
-:root[data-theme="light"] .home-page {
-  background-color: var(--main-bg-light, #f8f9fa); /* Using a very light gray for background */
-}
-
-:root[data-theme="light"] .category-section,
-:root[data-theme="light"] .live-list-section {
-  background-color: var(--main-bg-light, #f8f9fa); /* Match home page background */
-}
-
-:root[data-theme="light"] .loading-message {
-  color: var(--main-text-secondary-light, #555555); /* Darker gray for text in light mode */
 }
 </style>

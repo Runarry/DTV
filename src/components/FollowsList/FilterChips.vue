@@ -35,33 +35,37 @@ const platformLabel = (p: Platform): string => {
 </script>
 
 <style scoped>
-.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-group { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin: 8px 0;
+  padding: 0 6px;
+}
 .filter-chip {
-  padding: 6px 12px; /* 稍微加大触控面积 */
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg, rgba(255,255,255,0.04));
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
   color: var(--secondary-text);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  font-weight: 500;
-  backdrop-filter: saturate(130%) blur(4px);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
 }
 .filter-chip:hover {
-  background: var(--card-hover-bg, rgba(255,255,255,0.08));
+  background: var(--hover-bg);
+  color: var(--accent-color);
   transform: translateY(-1px);
+  border-color: var(--accent-color);
 }
 .filter-chip.active {
-  /* 选中态：强调背景与字体变化 */
-  background: linear-gradient(180deg, rgba(0,218,198,0.22), rgba(0,218,198,0.15));
-  border-color: rgba(0,218,198,0.45);
-  color: var(--primary-text);
-  box-shadow: 0 6px 16px rgba(0,218,198,0.25);
-  font-weight: 600;
-}
-:root[data-theme="light"] .filter-chip.active {
-  background: linear-gradient(180deg, rgba(0,218,198,0.12), rgba(0,218,198,0.08));
-  border-color: rgba(0,218,198,0.35);
-  box-shadow: 0 4px 10px rgba(0,218,198,0.18);
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
 }
 </style>

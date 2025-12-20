@@ -359,81 +359,72 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
 .folder-item {
   position: relative;
   margin-bottom: 8px;
-  border-radius: 12px;
+  border-radius: 18px;
   background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.18);
   overflow: hidden;
-  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   user-select: none;
-  -webkit-user-select: none;
 }
 
-.folder-item * {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.folder-item.is-dragging {
-  opacity: 0.85;
-  transform: scale(1.01);
-}
-
-.folder-item.can-accept-drop {
-  cursor: pointer;
-}
-
-.folder-item.is-drag-over {
-  border-color: rgba(125, 211, 252, 0.6);
-  background: rgba(125, 211, 252, 0.1);
-  box-shadow: 0 10px 40px -18px rgba(125, 211, 252, 0.45);
-  transform: translateY(-1px);
+.folder-item.is-expanded {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transform: scale(1.02);
 }
 
 .folder-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
+  gap: 12px;
+  padding: 10px 16px;
   cursor: pointer;
-  user-select: none;
-  background: rgba(255, 255, 255, 0.03);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color-light);
 }
 
 .folder-header:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.folder-header:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--hover-bg);
+  border-color: var(--accent-color);
 }
 
 .folder-icon {
   width: 16px;
   height: 16px;
-  color: rgba(148, 163, 184, 0.8);
-  transition: transform 0.2s ease, color 0.2s ease;
-  flex-shrink: 0;
+  color: var(--accent-color);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.folder-icon.is-expanded {
-  color: rgba(125, 211, 252, 0.9);
+.folder-item.is-expanded .folder-icon {
+  color: var(--accent-color);
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.3));
 }
 
 .folder-name {
   flex: 1;
-  font-weight: 600;
-  font-size: 13px;
-  color: rgba(226, 232, 240, 0.9);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
 .folder-count {
-  font-size: 12px;
-  color: rgba(148, 163, 184, 0.75);
-  margin-left: 4px;
+  font-size: 10px;
+  color: var(--accent-color);
+  font-weight: 800;
+  background: var(--primary-bg);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.05);
 }
 
 .expand-icon {
@@ -442,24 +433,12 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
   justify-content: center;
   width: 12px;
   height: 12px;
-  color: rgba(148, 163, 184, 0.7);
-  flex-shrink: 0;
-}
-
-.expand-icon svg {
-  width: 12px;
-  height: 12px;
+  color: var(--accent-color);
 }
 
 .folder-content {
-  padding: 6px 8px 10px;
-  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  padding: 8px 6px 14px;
   overflow: hidden;
-  will-change: height, opacity;
-  /* Rendering isolation for fluidity */
-  contain: paint layout;
-  content-visibility: auto;
-  transform: translateZ(0); 
 }
 
 .folder-streamers-list {
@@ -468,73 +447,20 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .folder-streamer-item {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: 10px;
-  background: rgba(40, 40, 46, 0.8);
-  border: 1px solid rgba(96, 98, 112, 0.24);
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  transition: all 0.2s ease;
 }
 
 .folder-streamer-item:hover {
-  transform: translateY(-1px);
-  border-color: rgba(168, 174, 189, 0.35);
-  background: rgba(52, 53, 60, 0.9);
-}
-
-:root[data-theme="light"] .folder-item {
-  background: transparent;
-  border-color: rgba(209, 217, 234, 0.7);
-}
-
-:root[data-theme="light"] .folder-header {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-:root[data-theme="light"] .folder-header:hover {
-  background: rgba(114, 147, 255, 0.12);
-}
-
-:root[data-theme="light"] .folder-name {
-  color: #334155;
-}
-
-:root[data-theme="light"] .folder-icon {
-  color: rgba(71, 85, 105, 0.7);
-}
-
-:root[data-theme="light"] .folder-icon.is-expanded {
-  color: rgba(114, 147, 255, 0.9);
-}
-
-:root[data-theme="light"] .folder-count {
-  color: rgba(100, 116, 139, 0.7);
-}
-
-:root[data-theme="light"] .folder-streamer-item {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(209, 217, 234, 0.6);
-}
-
-:root[data-theme="light"] .folder-streamer-item:hover {
-  background: rgba(114, 147, 255, 0.15);
-  border-color: rgba(114, 147, 255, 0.35);
-}
-
-:root[data-theme="light"] .folder-item.is-drag-over {
-  border-color: rgba(114, 147, 255, 0.6);
-  background: rgba(114, 147, 255, 0.12);
-  box-shadow: 0 10px 40px -18px rgba(114, 147, 255, 0.35);
-}
-
-:root[data-theme="light"] .folder-content {
-  border-top-color: rgba(209, 217, 234, 0.65);
+  background: var(--hover-bg);
 }
 </style>

@@ -177,17 +177,13 @@ const handleToggleInternalExpand = () => {
 
 <style scoped>
 .cate2-container {
-  padding: 14px 12px;
+  padding: 20px 32px;
   display: flex;
   flex-direction: column;
   flex: 1;
   position: relative;
   overflow: visible;
-  background: var(--cate2-grid-area-bg-dark, #18181b);
-}
-
-:root[data-theme="light"] .cate2-container {
-  background-color: var(--primary-bg, #FFFFFF);
+  background: transparent;
 }
 
 .cate2-content {
@@ -195,113 +191,55 @@ const handleToggleInternalExpand = () => {
   height: 0;
   padding-bottom: 8px;
   overflow: hidden;
-  transition: height 0.4s cubic-bezier(0.33, 0.66, 0.66, 1);
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: height;
-  transform: translateZ(0);
-  box-sizing: border-box;
-}
-
-.cate2-scroll-wrapper {
-  max-height: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.cate2-content.is-expanded .cate2-scroll-wrapper.allow-scroll {
-  overflow-y: auto !important;
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
-}
-
-.cate2-content.is-expanded .cate2-scroll-wrapper.allow-scroll::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 
 .cate2-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 120px));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 12px;
   justify-content: flex-start;
-  padding-top: 2px;
-  padding-left: 2px;
-  padding-right: 2px;
-  padding-bottom: 18px;
+  padding-bottom: 32px;
 }
 
 .cate2-card {
-  width: 120px;
-  height: var(--cate2-card-height, 36px);
-  padding: 6px 8px;
-  border-radius: 12px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 100px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #1e2022;
-  border: 1px solid rgba(90, 176, 255, 0.12);
-  box-shadow: 0 8px 22px rgba(3, 8, 20, 0.42);
-  color: rgba(226, 232, 240, 0.86);
+  justify-content: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--secondary-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .cate2-card:hover {
-  background: #25282b;
-  border-color: rgba(125, 211, 252, 0.32);
-  color: rgba(241, 245, 249, 0.95);
-  box-shadow: 0 12px 26px rgba(10, 20, 38, 0.44);
+  background: var(--hover-bg);
+  color: var(--primary-text);
+  border-color: var(--accent-color);
+  transform: scale(1.05);
 }
 
 .cate2-card.active {
-  background: linear-gradient(150deg, rgba(79, 209, 197, 0.35), rgba(59, 130, 246, 0.28));
-  border-color: rgba(125, 211, 252, 0.45);
-  color: rgba(222, 255, 250, 0.95);
-  box-shadow: 0 14px 34px rgba(15, 118, 110, 0.35);
+  background: var(--accent-gradient);
+  color: var(--accent-text);
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(191, 255, 0, 0.25);
 }
 
-.cate2-card.active .cate2-name {
-  color: rgba(222, 255, 250, 0.95);
-}
-
-:root[data-theme="light"] .cate2-card {
-  background: rgba(248, 250, 255, 0.9);
-  border: 1px solid rgba(203, 213, 225, 0.65);
-  box-shadow: none;
-  color: #334155;
-}
-
-:root[data-theme="light"] .cate2-card:hover {
-  background: rgba(241, 245, 255, 0.96);
-  border-color: rgba(148, 163, 184, 0.7);
-  color: #1f2f4d;
-  box-shadow: none;
-}
-
-:root[data-theme="light"] .cate2-card.active {
-  background: linear-gradient(140deg, rgba(229, 236, 255, 0.96), rgba(204, 219, 255, 0.94));
-  border-color: rgba(114, 136, 255, 0.6);
-  box-shadow: 0 12px 24px rgba(108, 130, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.48);
-  color: #162a63;
-}
-
-:root[data-theme="light"] .cate2-card:not(.active) .cate2-name {
-  color: #31415d;
-}
-:root[data-theme="light"] .cate2-card.active .cate2-name {
-  color: #162a63;
-}
 .cate2-name {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
-  flex: 1;
-  text-align: left;
+  text-align: center;
 }
 
 .expand-button {
@@ -309,45 +247,30 @@ const handleToggleInternalExpand = () => {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  min-width: 88px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 6px 14px;
-  font-size: 12px;
-  height: 28px;
-  box-sizing: border-box;
+  gap: 6px;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--secondary-text);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
-  background: rgba(26, 29, 37, 0.92);
-  color: rgba(226, 232, 240, 0.72);
-  border: 1px solid rgba(125, 211, 252, 0.12);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(8, 16, 28, 0.32);
-  z-index: 10;
+  border-radius: 100px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .expand-button:hover {
-  color: rgba(248, 250, 252, 0.95);
-  background: rgba(32, 37, 48, 0.96);
-  border-color: rgba(125, 211, 252, 0.3);
-}
-
-:root[data-theme="light"] .expand-button {
-  background: #f4f7fd;
-  color: var(--douyu-cate2-expand-btn-text-light, var(--secondary-text, #4b5563));
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
-}
-
-:root[data-theme="light"] .expand-button:hover {
-  color: var(--douyu-cate2-expand-btn-hover-text-light, var(--primary-text, #1f2937));
-  background: #e5ecfe;
+  background: var(--tertiary-bg);
+  color: var(--primary-text);
+  border-color: var(--accent-color);
 }
 
 .expand-icon {
-  margin-left: 4px;
+  margin-left: 2px;
   transition: transform 0.4s cubic-bezier(0.33, 0.66, 0.66, 1);
   width: 12px;
   height: 12px;

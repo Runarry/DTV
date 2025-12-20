@@ -1,32 +1,49 @@
 <template>
   <div class="app">
-    <Sidebar 
-      v-show="!shouldHidePlayerChrome"
-      :followedAnchors="followedStreamersFromStore" 
-      @selectAnchor="handleStreamerSelect"
-      @unfollow="handleUnfollowStore"
-      @reorderList="handleReorderListStore"
-    />
-    <div class="main-content">
-      <Header 
-        v-show="!shouldHidePlayerChrome"
-        @select-anchor="handleStreamerSelect"
-        @follow="handleFollowStore"
-        @unfollow="handleUnfollowStore"
-      />
-      <router-view 
-        v-slot="{ Component, route }" 
-        @follow="handleFollowStore"
-        @unfollow="handleUnfollowStore"
-        @fullscreen-change="handleFullscreenChange"
-      >
-        <transition name="fade" mode="out-in">
-          <keep-alive :include="['HomeView', 'DouyinHomeView', 'HuyaHomeView', 'BilibiliHomeView']">
-            <component :is="Component" :key="route.path" />
-          </keep-alive>
-        </transition>
-      </router-view>
+    <div class="sidebar-container" v-show="!shouldHidePlayerChrome">
+      <div class="sidebar-glass-panel">
+        <Sidebar 
+          :followedAnchors="followedStreamersFromStore" 
+          @selectAnchor="handleStreamerSelect"
+          @unfollow="handleUnfollowStore"
+          @reorderList="handleReorderListStore"
+        />
+      </div>
     </div>
+    
+    <div class="main-content">
+      <div class="content-glass-panel">
+        <Header 
+          v-show="!shouldHidePlayerChrome"
+          @select-anchor="handleStreamerSelect"
+          @follow="handleFollowStore"
+          @unfollow="handleUnfollowStore"
+        />
+        <div class="page-container">
+          <router-view 
+            v-slot="{ Component, route }" 
+            @follow="handleFollowStore"
+            @unfollow="handleUnfollowStore"
+            @fullscreen-change="handleFullscreenChange"
+          >
+            <transition name="fade" mode="out-in">
+              <keep-alive :include="['HomeView', 'DouyinHomeView', 'HuyaHomeView', 'BilibiliHomeView']">
+                <component :is="Component" :key="route.path" />
+              </keep-alive>
+            </transition>
+          </router-view>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG Squircle Definition -->
+    <svg width="0" height="0" style="position: absolute; pointer-events: none;">
+      <defs>
+        <clipPath id="squircle-clip" clipPathUnits="objectBoundingBox">
+          <path d="M0.5 0 C0.9995 0 1 0.0005 1 0.5 C1 0.9995 0.9995 1 0.5 1 C0.0005 1 0 0.9995 0 0.5 C0 0.0005 0.0005 0 0.5 0 Z" />
+        </clipPath>
+      </defs>
+    </svg>
   </div>
 </template>
 
@@ -139,36 +156,89 @@ const handleFullscreenChange = (isFullscreen: boolean) => {
 .app {
   display: flex;
   height: 100vh;
-  background: var(--main-bg);
+  background: var(--primary-bg);
+  background-image: var(--page-mesh);
+  background-attachment: fixed;
+  color: var(--primary-text);
+  overflow: hidden;
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.5s ease;
+}
+
+.sidebar-container {
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.sidebar-glass-panel {
+  height: 100%;
+  display: flex;
+  background: transparent;
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  padding: 12px;
+  background: transparent;
+}
+
+.content-glass-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
+  position: relative;
 }
 
-/* 全屏模式时隐藏UI */
-.app.hide-ui > :not(.main-content) {
-  display: none !important;
+.page-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
-.app.hide-ui .main-content > :not(.player-view-container) {
-  display: none !important;
+/* Forest Glass Background Enhancements */
+.app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 10%, rgba(191, 255, 0, 0.05), transparent 40%),
+              radial-gradient(circle at 90% 90%, rgba(74, 103, 74, 0.1), transparent 40%);
+  z-index: -1;
+  pointer-events: none;
 }
 
-.app.hide-ui {
-  background: transparent !important;
+/* Fullscreen mode handling */
+.app.hide-ui .main-content {
+  padding: 0;
+}
+
+.app.hide-ui .content-glass-panel {
+  border-radius: 0;
+  border: none;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.fade-enter-from,
+.fade-enter-from {
+  opacity: 0;
+  transform: scale(0.98) translateY(10px);
+}
+
 .fade-leave-to {
   opacity: 0;
+  transform: scale(1.02) translateY(-10px);
 }
 </style>

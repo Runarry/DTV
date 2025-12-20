@@ -1,5 +1,5 @@
 <template>
-  <div class="category-list" :class="{ 'is-expanded': isExpanded }" ref="categoryListRootRef">
+  <div class="category-list" :class="{ 'is-expanded': isExpanded }">
     <template v-if="cate1List.length > 0">
       <Cate1List
         :cate1-list="cate1List"
@@ -36,7 +36,6 @@ const emit = defineEmits<{
   (e: 'category-section-height-settled'): void
 }>()
 
-const categoryListRootRef = ref<HTMLElement | null>(null)
 
 const cate1List = ref<CommonCategory1[]>([])
 const selectedCate1Href = ref<string | null>(null)
@@ -137,20 +136,17 @@ const handleCate2GridHeightChanged = () => {
 .category-list {
   display: flex;
   flex-direction: column;
-  background: var(--component-bg);
-  color: var(--text-color);
+  background: var(--primary-bg);
+  color: var(--primary-text);
   max-height: 280px;
   min-height: 200px;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.33, 0.66, 0.66, 1), background-color 0.3s ease, color 0.3s ease;
+  transition: max-height 0.3s ease;
   will-change: max-height;
   transform: translateZ(0);
   width: 100%;
-}
-
-:root[data-theme="light"] .category-list {
-  background-color: var(--main-bg-light, #FFFFFF);
-  color: var(--main-text-primary-light, #212529);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
 }
 
 .category-list.is-expanded {
@@ -158,7 +154,7 @@ const handleCate2GridHeightChanged = () => {
 }
 
 .loading-state {
-  padding: 40px 20px;
+  padding: 32px 16px;
   text-align: center;
   color: var(--secondary-text);
   display: flex;
@@ -168,32 +164,20 @@ const handleCate2GridHeightChanged = () => {
   height: 100%;
 }
 
-:root[data-theme="light"] .loading-state {
-  color: var(--main-text-secondary-light, #495057);
-}
-
 .loading-spinner {
-  width: 30px;
-  height: 30px;
-  border: 3px solid rgba(128, 128, 128, 0.2);
-  border-top-color: var(--primary-text);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-color);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-:root[data-theme="light"] .loading-spinner {
-  border-color: var(--border-color-light-softer, rgba(0,0,0,0.1));
-  border-top-color: var(--accent-color-light, #007bff);
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
 }
 
 .loading-text {
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--secondary-text);
-}
-
-:root[data-theme="light"] .loading-text {
-  color: var(--main-text-secondary-light, #495057);
 }
 
 @keyframes spin {

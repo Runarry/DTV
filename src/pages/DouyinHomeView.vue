@@ -39,6 +39,7 @@ function onCategorySelected(evt: CategorySelectedEvent) {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: transparent;
 }
 
 .douyin-content {
@@ -48,14 +49,17 @@ function onCategorySelected(evt: CategorySelectedEvent) {
 }
 
 .left-panel {
-  width: 100%; /* 顶部区域占满宽度 */
-  /* 移除贯通的横线，保持与其他平台一致 */
-  border-bottom: none;
+  width: 100%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color-light);
+  z-index: 10;
   overflow: hidden;
 }
 
 .right-panel {
-  flex: 1; /* 下方列表区域填满剩余空间 */
+  flex: 1;
   overflow: hidden;
+  background: transparent;
 }
 </style>

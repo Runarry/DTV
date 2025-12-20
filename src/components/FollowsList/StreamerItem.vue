@@ -37,149 +37,166 @@
 .streamer-item-content {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* 保持内容靠左，状态胶囊以 margin-left 自动右对齐 */
-  width: 100%; /* 占满父级，使右侧胶囊推到最右侧 */
+  justify-content: flex-start;
+  width: 100%;
   user-select: none;
-  -webkit-user-select: none;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  margin-bottom: 2px;
 }
 
-.streamer-item-content * {
-  user-select: none;
-  -webkit-user-select: none;
+.streamer-item-content:hover {
+  background: var(--hover-bg);
+  border-color: var(--accent-color);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 24px rgba(139, 92, 246, 0.15);
+  z-index: 10;
 }
 
 .item-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 1; /* 占据剩余空间，便于右侧胶囊右对齐 */
-  min-width: 0; /* 允许内部收缩并出现省略号 */
-  overflow: hidden; /* 防止内部因长文本溢出影响右侧状态点 */
+  padding: 10px 14px;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  z-index: 2;
 }
 
 .avatar-container {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(126, 203, 255, 0.22), rgba(255, 255, 255, 0.1));
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto; /* 固定尺寸不参与收缩 */
-  transition: transform 0.3s ease;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: relative;
+  flex: 0 0 auto;
+  transition: all 0.3s ease;
 }
-.avatar-container.big {
-  width: 48px;
-  height: 48px;
-}
+
 .avatar-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--tertiary-bg);
+  transition: all 0.3s ease;
 }
+
+.avatar-container.is-live::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  padding: 2px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate-border 3s linear infinite;
+}
+
+.avatar-container.is-live .avatar-image {
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+@keyframes rotate-border {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .avatar-fallback {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--primary-text, #e2e8f0);
+  font-weight: 700;
+  color: var(--accent-color);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tertiary-bg);
+  border-radius: 50%;
 }
 
 .streamer-details {
   display: flex;
   flex-direction: column;
-  flex: 1; /* 允许详情区域占满并在必要时收缩 */
-  min-width: 0; /* 对 flex 子项生效的省略号关键设置 */
-}
-.primary-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 2px;
+  flex: 1;
   min-width: 0;
 }
+
 .nickname {
-  font-weight: 700; /* 保留粗体 */
-  color: rgba(220, 228, 242);
-  letter-spacing: 0.01em;
-  font-size: 14px; /* 缩小字体 */
-  max-width: 140px;
-  min-width: 0;
+  font-weight: 700;
+  color: var(--primary-text);
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.3s ease;
+  letter-spacing: 0.01em;
 }
-/* 大尺寸卡片（overlay 内使用）：使用百分比限制，保证右侧状态点空间 */
-.streamer-item-content.big .nickname { max-width: 100%; font-size: 14px; }
-.streamer-item-content.big .secondary-row { max-width: 100%; }
+
+.secondary-row {
+  font-size: 11px;
+  color: var(--secondary-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  margin-top: 3px;
+  opacity: 0.8;
+}
 
 .status-container {
   display: flex;
   align-items: center;
-  margin-left: auto; /* 将右侧胶囊/状态点推到最右侧 */
-  flex: 0 0 auto; /* 固定宽度，不参与收缩，避免被长文本挤出 */
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding-right: 14px;
+  z-index: 2;
 }
-/* 胶囊样式：集成状态点 + 平台名 */
+
 .platform-badge {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(126, 203, 255, 0.35);
-  border-radius: 999px;
-  padding: 4px 10px;
-  background: rgba(126, 203, 255, 0.16);
-  color: rgba(226, 232, 240, 0.9);
-  font-size: 12px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  border-radius: 20px;
+  padding: 3px 10px;
+  background: var(--tertiary-bg);
+  color: var(--accent-color);
+  font-size: 10px;
+  font-weight: 800;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.1);
 }
-.platform-badge .live-indicator {
-  width: 6px;
-  height: 6px;
-}
-.badge-text { line-height: 1; }
 
 .live-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--border-color);
+  background: var(--dim-text);
+  transition: all 0.3s ease;
 }
-.live-indicator.is-live { background: #22c55e; }
-.live-indicator.is-replay { background: #f59e0b; }
-.live-indicator.is-offline { background: #6b7280; }
-</style>
 
-<style scoped>
-/* 直播间标题：恢复更小字号与单行显示 */
-.secondary-row {
-  font-size: 12px;
-  color: rgba(180, 197, 222, 0.75);
-  font-weight: 500;
-  max-width: 160px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap; /* 单行 */
+.live-indicator.is-live { 
+  background: #10b981; 
+  box-shadow: 0 0 12px #10b981;
+  animation: breathing 2s ease-in-out infinite;
 }
-.streamer-item-content.big .secondary-row { max-width: 100%; font-size: 10px; }
-:root[data-theme="light"] .nickname {
-  color: #364253;
+
+@keyframes breathing {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
 }
-:root[data-theme="light"] .secondary-row {
-  color: rgba(109, 122, 147, 0.85);
-}
-:root[data-theme="light"] .platform-badge {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(148, 163, 184, 0.38);
-  color: rgba(71, 85, 105, 0.9);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-}
-:root[data-theme="light"] .avatar-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(210, 225, 255, 0.85));
-  border-color: rgba(148, 163, 184, 0.4);
-}
+
+.live-indicator.is-replay { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.live-indicator.is-offline { background: var(--border-color); }
 </style>
 
 <script setup lang="ts">

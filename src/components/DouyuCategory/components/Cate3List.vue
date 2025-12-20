@@ -64,52 +64,49 @@ const selectAll = () => {
 
 .cate3-item {
   padding: 4px 12px;
-  height: 30px;
-  border-radius: 10px;
+  height: 28px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  font-size: 13px;
-  background: #1e2022;
-  border: 1px solid rgba(90, 176, 255, 0.12);
-  color: rgba(226, 232, 240, 0.86);
+  font-size: 12px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--secondary-text);
+  font-weight: 450;
 }
 
 .cate3-item:hover {
-  background: #272a2d;
-  border-color: rgba(125, 211, 252, 0.32);
-  color: rgba(241, 245, 249, 0.95);
-  box-shadow: 0 10px 20px rgba(10, 20, 38, 0.38);
+  background: var(--tertiary-bg);
+  border-color: var(--accent-color);
+  color: var(--primary-text);
 }
 
 .cate3-item.active {
-  background: linear-gradient(150deg, rgba(79, 209, 197, 0.35), rgba(59, 130, 246, 0.28));
-  border-color: rgba(125, 211, 252, 0.45);
-  color: rgba(222, 255, 250, 0.95);
-  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.32);
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
   font-weight: 600;
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
 }
 
 :root[data-theme="light"] .cate3-item {
-  background: rgba(248, 250, 255, 0.9);
-  border: 1px solid rgba(203, 213, 225, 0.65);
-  color: #334155;
-  box-shadow: none;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #71717a;
 }
 
 :root[data-theme="light"] .cate3-item:hover {
-  background: rgba(241, 245, 255, 0.96);
-  border-color: rgba(148, 163, 184, 0.7);
-  color: #1f2f4d;
+  background: #e4e4e7;
+  color: #18181b;
 }
 
 :root[data-theme="light"] .cate3-item.active {
-  background: linear-gradient(140deg, rgba(229, 236, 255, 0.96), rgba(204, 219, 255, 0.94));
-  border-color: rgba(114, 136, 255, 0.6);
-  box-shadow: 0 12px 24px rgba(108, 130, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.48);
-  color: #162a63;
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
 }
 
 .loading-cate3 {

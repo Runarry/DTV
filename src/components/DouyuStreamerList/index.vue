@@ -1,50 +1,62 @@
 <template>
   <div class="live-list-container-infinite">
     <div v-if="isLoading && streamers.length === 0" class="loading-initial-state">
-      <p>正在加载主播列表 {{ props.categoryName ? 'for ' + props.categoryName : '' }}...</p>
+      <div class="loading-spinner"></div>
+      <p>正在加载主播列表...</p>
     </div>
     <div v-else-if="!isLoading && streamers.length === 0 && props.categoryId" class="no-streamers-state">
-      <p>分类 {{ props.categoryName || props.categoryId }} 下暂无主播。</p>
+      <p>分类下暂无主播</p>
     </div>
     <div v-else-if="!props.categoryId && !isLoading" class="no-category-state">
-       <p>请先选择一个分类。</p>
+       <p>请选择一个分类开始浏览</p>
     </div>
 
     <div class="live-grid-scroll-area" ref="scrollComponentRef">
       <div class="live-grid-infinite">
-        <div 
+        <motion.div 
           v-for="(streamer, index) in streamers" 
           :key="streamer.rid + '-' + index" 
-          class="streamer-card-revised"
+          class="card-shadow-wrapper"
           @click="goToPlayer(streamer.rid)"
+          :initial="{ opacity: 1, scale: 1 }"
+          :animate="{ opacity: 1, scale: 1 }"
+          whileHover="{ scale: 1.02, transition: { duration: 0.2 } }"
         >
-          <div class="card-preview-revised">
-            <SmoothImage 
-              :src="streamer.roomSrc || 'https://via.placeholder.com/320x180.png?text=No+Image'" 
-              :alt="streamer.roomName" 
-              class="preview-image-revised" 
-            />
-            <span class="viewers-count-overlay">
-              <svg class="viewers-icon-revised" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-              {{ streamer.hn }} 
-            </span>
-          </div>
-          <div class="card-info-footer-revised">
-            <SmoothImage 
-              :src="streamer.avatar || 'https://via.placeholder.com/40.png?text=N/A'" 
-              :alt="streamer.nickname" 
-              class="streamer-avatar-revised" 
-            />
-            <div class="text-details-revised">
-              <h3 class="room-title-revised" :title="streamer.roomName">{{ streamer.roomName }}</h3>
-              <p class="nickname-revised" :title="streamer.nickname">{{ streamer.nickname }}</p>
+          <div class="streamer-card-revised">
+            <div class="card-preview-revised">
+              <div class="image-wrapper-frame">
+                <SmoothImage 
+                  :src="streamer.roomSrc || ''" 
+                  :alt="streamer.roomName" 
+                  class="preview-image-revised" 
+                />
+                <div class="card-overlay-gradient"></div>
+                <span class="viewers-count-overlay">
+                  <svg class="viewers-icon-revised" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                  {{ streamer.hn }} 
+                </span>
+              </div>
+            </div>
+            <div class="card-info-footer-revised">
+              <div class="avatar-container">
+                <SmoothImage 
+                  :src="streamer.avatar || ''" 
+                  :alt="streamer.nickname" 
+                  class="streamer-avatar-revised" 
+                />
+              </div>
+              <div class="text-details-revised">
+                <h3 class="room-title-revised" :title="streamer.roomName">{{ streamer.roomName }}</h3>
+                <p class="nickname-revised" :title="streamer.nickname">{{ streamer.nickname }}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
       <div ref="sentinelRef" class="scroll-sentinel"></div>
       <div v-if="isLoading && streamers.length > 0" class="loading-more-indicator">
-        <p>正在加载更多主播...</p>
+        <div class="mini-spinner"></div>
+        <p>努力加载中...</p>
       </div>
     </div>
   </div>
@@ -53,6 +65,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { motion } from 'motion-v'
 import { useLiveData } from './composables/useLiveData'
 import SmoothImage from '../Common/SmoothImage.vue'
 
@@ -81,7 +94,7 @@ const setupIntersectionObserver = () => {
 
   const options = {
     root: scrollComponentRef.value,
-    rootMargin: '0px',
+    rootMargin: '200px',
     threshold: 0.1 
   };
 
@@ -96,44 +109,31 @@ const setupIntersectionObserver = () => {
 
   if (sentinelRef.value) {
     observer.observe(sentinelRef.value);
-  } else {
-    console.warn('[LiveList InfiniteScroll] Sentinel ref not found during observer setup.');
   }
 };
 
-
 onMounted(() => {
-  nextTick(() => {
-      setupIntersectionObserver();
-  });
+  nextTick(setupIntersectionObserver);
 });
 
 onBeforeUnmount(() => {
-  if (observer) {
-    observer.disconnect();
-  }
+  if (observer) observer.disconnect();
 });
 
-watch(() => ({ type: props.categoryType, id: props.categoryId }), (newCategory, _oldCategory) => {
-  if (newCategory && newCategory.id) {
-    resetAndFetch(newCategory.type, newCategory.id);
-  } else {
+watch(() => ({ type: props.categoryType, id: props.categoryId }), (newCategory) => {
+  if (newCategory?.id) resetAndFetch(newCategory.type, newCategory.id);
+  else {
     streamers.value = []; 
     hasMore.value = false; 
   }
   nextTick(() => {
-      if(sentinelRef.value && observer) {
-      } else if (scrollComponentRef.value && sentinelRef.value) {
-          setupIntersectionObserver();
-      }
+    if (scrollComponentRef.value && sentinelRef.value) setupIntersectionObserver();
   });
 }, { immediate: true, deep: true });
 
 const goToPlayer = (roomId: string) => {
-  if (!roomId) return;
-  router.push({ name: 'douyuPlayer', params: { roomId } });
+  if (roomId) router.push({ name: 'douyuPlayer', params: { roomId } });
 }
-
 </script>
 
 <style scoped>
@@ -143,24 +143,9 @@ const goToPlayer = (roomId: string) => {
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--primary-bg);
-  color: var(--primary-text);
+  background-color: transparent;
   overflow: hidden; 
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.live-list-header {
-  padding: 8px 16px;
-  color: #e0e0e0;
-  font-size: 1.1em;
-  background-color: #2a2a2e;
-  border-bottom: 1px solid #333;
-  flex-shrink: 0;
-}
-.live-list-header h2 {
-  margin: 0;
-  font-size: 1em;
-  font-weight: 600;
+  --squircle-radius: 1%;
 }
 
 .loading-initial-state,
@@ -168,166 +153,180 @@ const goToPlayer = (roomId: string) => {
 .no-category-state,
 .loading-more-indicator {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 40px;
   color: var(--secondary-text);
-  font-size: 15px;
-  text-align: center;
+  gap: 12px;
 }
-.loading-initial-state, .no-streamers-state, .no-category-state {
-    flex-grow: 1; 
-}
-.loading-more-indicator {
-    min-height: 60px; 
-}
+
+.loading-initial-state { flex-grow: 1; }
 
 .live-grid-scroll-area {
   flex-grow: 1;
   overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px 24px;
-  position: relative; 
-  scrollbar-width: thin; 
-  scrollbar-color: var(--scrollbar-thumb-bg, #444) var(--scrollbar-track-bg, #18181b);
-  /* Optimization: isolate this area from layout/paint during sibling animations */
-  contain: paint layout;
-  content-visibility: auto;
-}
-:root[data-theme="light"] .live-grid-scroll-area {
-  scrollbar-color: var(--scrollbar-thumb-bg-light, #adb5bd) var(--scrollbar-track-bg-light, #e9ecef);
+  padding: 24px 0;
 }
 
 .live-grid-scroll-area::-webkit-scrollbar {
-  width: 8px;
-}
-.live-grid-scroll-area::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-bg, #18181b);
-}
-:root[data-theme="light"] .live-grid-scroll-area::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-bg-light, #e9ecef);
+  width: 6px;
 }
 
 .live-grid-scroll-area::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-bg, #444);
-  border-radius: 4px;
-  border: 2px solid var(--scrollbar-track-bg, #18181b);
-}
-:root[data-theme="light"] .live-grid-scroll-area::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-bg-light, #adb5bd);
-  border: 2px solid var(--scrollbar-track-bg-light, #e9ecef);
+  background: var(--border-color);
+  border-radius: 10px;
 }
 
 .live-grid-infinite {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 24px;
-  width: 100%;
+  gap: 20px;
+}
+
+.card-shadow-wrapper {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-shadow-wrapper:hover {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4));
 }
 
 .streamer-card-revised {
-  background-color: var(--card-bg);
-  color: var(--primary-text);
-  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  clip-path: url(#squircle-clip);
+  border-radius: var(--squircle-radius);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out, background-color 0.3s ease;
   cursor: pointer;
-  border: 1px solid transparent; 
-  box-shadow: var(--card-shadow);
+  border: 1px solid var(--glass-border);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 10px;
 }
 
-:root[data-theme="dark"] .streamer-card-revised:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 12px rgba(0,0,0, 0.3);
-  border-color: var(--border-color-light);
-}
-:root[data-theme="light"] .streamer-card-revised:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0,0,0, 0.15);
-  border-color: transparent;
-  background-color: var(--streamer-card-hover-bg-light, #f8f9fa);
+.streamer-card-revised:hover {
+  background: var(--hover-bg);
 }
 
 .card-preview-revised {
   width: 100%;
   aspect-ratio: 16 / 10;
-  background-color: var(--secondary-bg);
   position: relative;
   overflow: hidden;
+}
+
+.image-wrapper-frame {
+  width: 100%;
+  height: 100%;
+  clip-path: url(#squircle-clip);
+  border-radius: var(--squircle-radius);
+  overflow: hidden;
+  position: relative;
 }
 
 .preview-image-revised {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.streamer-card-revised:hover .preview-image-revised {
+  transform: scale(1.1);
+}
+
+.card-overlay-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 40%);
+  pointer-events: none;
 }
 
 .viewers-count-overlay {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  bottom: 8px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--primary-text);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 9px;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  line-height: 1;
-}
-
-.viewers-icon-revised {
-  margin-right: 4px;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card-info-footer-revised {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 10px 8px 4px 8px;
+  gap: 10px;
+}
+
+.avatar-container {
+  flex-shrink: 0;
 }
 
 .streamer-avatar-revised {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  margin-right: 10px;
-  flex-shrink: 0;
   object-fit: cover;
-  background-color: #444;
+  border: 1.5px solid var(--border-color);
+  transition: border-color 0.3s ease;
+}
+
+.streamer-card-revised:hover .streamer-avatar-revised {
+  border-color: var(--accent-color);
 }
 
 .text-details-revised {
-  overflow: hidden;
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
 }
 
 .room-title-revised {
-  font-size: 0.9rem;
-  margin: 0 0 2px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin-bottom: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-:root[data-theme="dark"] .room-title-revised {
-  color: var(--streamer-title-text-dark, #e0e0e0);
-}
-:root[data-theme="light"] .room-title-revised {
-  color: var(--streamer-title-text-light, #000000);
+  letter-spacing: -0.1px;
+  line-height: 1.2;
 }
 
 .nickname-revised {
-  font-size: 0.8rem;
-  color: #909090;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--secondary-text);
+  font-weight: 600;
+}
+
+.mini-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .scroll-sentinel {
-  height: 10px;
-  width: 100%;
+  height: 20px;
 }
-</style> 
+</style>
+ 

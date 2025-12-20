@@ -1,114 +1,108 @@
 :root,
-/* Default to light theme */
+/* Aurora Glass Design System - Radical Modernization */
+
 html[data-theme="light"] {
-  --primary-bg: #ffffff;
-  --secondary-bg: #f0f2f5;
-  --tertiary-bg: #e9ecef;
-  --primary-text: #1f2937;
-  --secondary-text: #4b5563;
-  --accent-color: #FB7299;
-  /* Pink accent, can be adjusted */
+  /* Forest Glass Light */
+  --primary-bg: #f2f5f3;
+  --secondary-bg: #e4e9e5;
+  --tertiary-bg: #d8deda;
+
+  --accent-color: #4a674a;
+  --accent-gradient: linear-gradient(135deg, #4a674a 0%, #769776 100%);
   --accent-text: #ffffff;
-  --border-color: #d1d5db;
-  --border-color-light: #e5e7eb;
-  /* Lighter border for some elements */
-  --border-color-dark: #4b5563;
-  /* Darker border for light theme if needed */
-  --link-color: #007bff;
-  --link-hover-color: #0056b3;
-  --success-color: #28a745;
-  --error-color: #dc3545;
-  --warning-color: #ffc107;
-  --info-color: #17a2b8;
-  --selected-bg: #FB7299;
-  /* Selected item background */
-  --selected-text: #ffffff;
-  /* Text color for selected items */
-  --hover-bg: rgba(251, 114, 153, 0.1);
-  /* Hover background with accent */
-  --button-bg: var(--accent-color);
-  --button-text: var(--accent-text);
-  --button-hover-bg: #e06387;
-  /* Darker accent for hover */
-  --input-bg: #ffffff;
-  --input-border: var(--border-color);
-  --input-text: var(--primary-text);
-  --disabled-bg: #e9ecef;
-  --disabled-text: #6c757d;
-  --card-bg: var(--primary-bg);
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  --primary-text: #1a241a;
+  --secondary-text: #5a6b5a;
+  --dim-text: #90a190;
+
+  --border-color: #d1d8d2;
+  --border-color-light: #e4e9e5;
+
+  --glass-bg: rgba(242, 245, 243, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.1);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 32px;
+
+  --hover-bg: rgba(74, 103, 74, 0.08);
+
+  --page-mesh: radial-gradient(at 0% 0%, rgba(74, 103, 74, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(74, 103, 74, 0.03) 0px, transparent 50%);
 }
 
 html[data-theme="dark"] {
-  --primary-bg: #1a1b1f;
-  /* Darker main background */
-  --secondary-bg: #24262b;
-  /* Slightly lighter for secondary elements */
-  --tertiary-bg: #2d2f39;
-  /* Even lighter for cards, sidebars etc. */
-  --primary-text: #f0f2f5;
-  /* Light primary text */
-  --secondary-text: #a0aec0;
-  /* Softer secondary text */
-  --accent-color: #FB7299;
-  /* Pink accent, consistent */
-  --accent-text: #ffffff;
-  --border-color: #4a5568;
-  /* Darker border */
-  --border-color-light: #5a5a5e;
-  /* For elements needing a slightly lighter border in dark mode */
-  --border-color-dark: #1e1e1e;
-  /* For elements needing a very dark border in dark mode */
-  --link-color: #63b3ed;
-  /* Lighter blue for links in dark mode */
-  --link-hover-color: #90cdf4;
-  --success-color: #48bb78;
-  /* Adjusted success color */
-  --error-color: #f56565;
-  /* Adjusted error color */
-  --warning-color: #f6e05e;
-  /* Adjusted warning color */
-  --info-color: #4fd1c5;
-  /* Adjusted info color */
-  --selected-bg: #FB7299;
-  /* Selected item background */
-  --selected-text: #ffffff;
-  --hover-bg: rgba(251, 114, 153, 0.15);
-  /* Slightly more visible hover in dark */
-  --button-bg: var(--accent-color);
-  --button-text: var(--accent-text);
-  --button-hover-bg: #e06387;
-  --input-bg: #2d2f39;
-  /* Dark input background */
-  --input-border: #4a5568;
-  --input-text: var(--primary-text);
-  --disabled-bg: #2d3748;
-  --disabled-text: #718096;
-  --card-bg: var(--tertiary-bg);
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  /* Forest Glass Dark - Inspired by reference */
+  --primary-bg: #121713;
+  --secondary-bg: #1a221b;
+  --tertiary-bg: #232d24;
+
+  --accent-color: #bfff00;
+  --accent-gradient: linear-gradient(135deg, #bfff00 0%, #8fbf00 100%);
+  --accent-text: #000000;
+
+  --primary-text: #e1e8e2;
+  --secondary-text: #98a69a;
+  --dim-text: #525c53;
+
+  --border-color: #232d24;
+  --border-color-light: #1a221b;
+
+  --glass-bg: rgba(18, 23, 19, 0.75);
+  --glass-border: rgba(191, 255, 0, 0.08);
+  --glass-blur: blur(40px);
+  --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  --card-bg: #1a221b;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.6);
+
+  --hover-bg: rgba(191, 255, 0, 0.05);
+
+  --radius-sm: 10px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+
+  /* Status Colors */
+  --status-live: #ff3e3e;
+  --status-offline: #525c53;
+  --status-active: #bfff00;
+  --status-warning: #f59e0b;
+
+  --page-mesh: radial-gradient(at 0% 0%, rgba(191, 255, 0, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(0, 0, 0, 0.2) 0px, transparent 50%);
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 450;
   color: var(--primary-text);
   background-color: var(--primary-bg);
+  background-image: var(--page-mesh);
+  background-attachment: fixed;
+  min-height: 100vh;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  transition: background-color 0.3s ease, color 0.3s ease;
+
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s ease;
 }
 
 #app {
-  background-color: transparent;
+  background: transparent;
 }
 
 * {
@@ -116,68 +110,68 @@ body {
 }
 
 a {
-  color: var(--link-color);
+  color: var(--accent-color);
   text-decoration: none;
-  transition: color 0.2s ease-in-out;
+  transition: all 0.2s ease;
 }
 
 a:hover {
-  color: var(--link-hover-color);
-  text-decoration: underline;
+  filter: brightness(1.1);
 }
 
-html.web-fs-active .app-sidebar,
-html.web-fs-active .app-header {
-  display: none !important;
+/* Custom Scrollbar for Aurora Glass */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-html.web-fs-active .app {
-  padding: 0 !important;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Skeleton and Loading Animations */
-:root,
-html[data-theme="light"] {
-  --skeleton-bg: #f2f2f2;
-  --skeleton-highlight: #e6e6e6;
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
 }
 
-html[data-theme="dark"] {
-  --skeleton-bg: #2d2f39;
-  --skeleton-highlight: #3a3d4a;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-text);
 }
 
-.skeleton {
-  background: linear-gradient(90deg,
-      var(--skeleton-bg) 25%,
-      var(--skeleton-highlight) 37%,
-      var(--skeleton-bg) 63%);
-  background-size: 400% 100%;
-  animation: skeleton-loading 1.4s ease infinite;
+/* Glass Utility Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
-@keyframes skeleton-loading {
-  0% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
+.glow-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(251, 114, 153, 0.3));
 }
 
-.fade-in {
-  animation: img-fade-in 0.4s ease-out forwards;
+.aurora-button {
+  background: var(--accent-gradient);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 15px rgba(251, 114, 153, 0.3);
 }
 
-@keyframes img-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
+.aurora-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(251, 114, 153, 0.4);
+}
 
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.aurora-button:active {
+  transform: scale(0.96);
 }

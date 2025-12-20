@@ -251,12 +251,12 @@ defineExpose({
 .category-list {
   display: flex;
   flex-direction: column;
-  background: #18181b;
+  background: transparent;
   color: var(--primary-text);
   max-height: 280px;
   min-height: 200px;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.33, 0.66, 0.66, 1), background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.33, 0.66, 0.66, 1);
   will-change: max-height;
   transform: translateZ(0);
   width: 100%;
@@ -279,8 +279,8 @@ defineExpose({
 .loading-spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #ff5d23;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
@@ -288,6 +288,7 @@ defineExpose({
 
 .loading-text {
   font-size: 14px;
+  color: var(--secondary-text);
 }
 
 @keyframes spin {
@@ -302,6 +303,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   height: 100%;
+  color: var(--secondary-text);
 }
 
 .error-message {
@@ -309,79 +311,28 @@ defineExpose({
 }
 
 .reload-btn {
-  padding: 6px 16px;
+  padding: 8px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s;
+  background: var(--accent-color);
+  color: var(--accent-text);
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-/* 添加新的样式来控制展开/折叠动画 */
+.reload-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 114, 153, 0.2);
+}
+
 .cate2-content {
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.cate2-content.is-expanded {
-  transform: translateY(0);
-}
-
-.cate2-content:not(.is-expanded) {
-  transform: translateY(0);
-}
-
-/* 确保内容在动画过程中保持可见 */
 .cate2-content.animating {
   overflow: hidden;
   will-change: transform, height;
-}
-
-:root[data-theme="light"] .category-list {
-  background-color: var(--primary-bg);
-  color: var(--primary-text);
-  box-shadow: var(--content-card-shadow-light);
-}
-
-:root[data-theme="light"] .loading-state .loading-text {
-  color: var(--secondary-text);
-}
-
-:root[data-theme="dark"] .loading-state .loading-text {
-  color: var(--secondary-text);
-}
-
-:root[data-theme="light"] .error-state {
-  color: var(--error-color);
-}
-
-:root[data-theme="dark"] .error-state {
-   color: var(--error-color);
-}
-
-:root[data-theme="light"] .error-state .error-message {
-  color: var(--error-color);
-}
-
-:root[data-theme="dark"] .error-state .error-message {
-  color: var(--error-color); 
-}
-
-:root[data-theme="light"] .reload-btn {
-  background-color: var(--accent-color);
-  color: var(--accent-text);
-  border: 1px solid transparent;
-}
-
-:root[data-theme="light"] .reload-btn:hover {
-  background-color: var(--button-hover-bg);
-}
-
-:root[data-theme="dark"] .reload-btn {
-  background: var(--accent-color);
-  color: var(--accent-text);
-  border: none;
-}
-
-:root[data-theme="dark"] .reload-btn:hover {
-  background: var(--button-hover-bg);
 }
 </style>

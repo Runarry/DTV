@@ -37,16 +37,21 @@ const onCategorySelected = (categoryEvent: CategorySelectedEvent) => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: transparent;
   overflow: hidden;
 }
 
 .huya-category-section {
   flex-shrink: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color-light);
+  z-index: 10;
 }
 
 .huya-streamer-list-section {
-  flex-grow: 1;
-  overflow-y: auto;
-  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: transparent;
 }
 </style>

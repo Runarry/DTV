@@ -14,11 +14,11 @@
   font-style: normal;
 }
 
-/* 全局主题变量 */
+/* 全局主题变量 - 灵动之气 (Luminous Air) */
 :root {
-  --player-accent: #f5f5f5;
-  --player-accent-strong: rgba(255, 255, 255, 0.28);
-  --player-accent-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(180, 180, 180, 0.85));
+  --player-accent: #8b5cf6;
+  --player-accent-strong: rgba(139, 92, 246, 0.15);
+  --player-accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
 }
 
 /* 整体布局 */
@@ -29,8 +29,9 @@
   height: 100%;
   max-height: 100vh;
   min-height: 0;
-  background: linear-gradient(135deg, #1a1b1f 0%, #2d2f39 100%);
-  padding: 12px 0 12px 0;
+  background: var(--primary-bg);
+  background-image: var(--page-mesh);
+  padding: 12px 0;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
@@ -79,19 +80,18 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  background-color: rgba(35, 37, 46, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px 0 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #000;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border: 1px solid var(--border-color);
   border-right: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
   min-height: 0;
   height: 100%;
   max-height: 100%;
   gap: 0;
   padding: 0;
+  z-index: 1;
 }
 
 :deep(.xgplayer-controls) {
@@ -123,12 +123,13 @@
   align-items: center;
   gap: 12px;
   padding: 6px 14px;
-  background: rgba(24, 28, 38, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
 }
 
 :deep(.danmu-control-group) {
@@ -161,6 +162,7 @@
   height: 100vh !important;
   width: 100vw !important;
 }
+
 /* Windows/WebView 兼容：不使用 :deep 的全屏选择器 */
 .xgplayer-is-fullscreen .player-container,
 .xgplayer-is-cssfullscreen .player-container {
@@ -182,6 +184,7 @@
   opacity: 0 !important;
   visibility: hidden !important;
 }
+
 /* Windows/WebView 兼容：隐藏非视频内容 */
 .xgplayer-is-fullscreen .streamer-info,
 .xgplayer-is-cssfullscreen .streamer-info {
@@ -198,6 +201,7 @@
   height: auto !important;
   min-height: auto !important;
 }
+
 /* Windows/WebView 兼容：视频容器填充 */
 .xgplayer-is-fullscreen .video-container,
 .xgplayer-is-cssfullscreen .video-container {
@@ -206,28 +210,31 @@
   min-height: auto !important;
 }
 
-/* 视频播放器 */
+/* 视频容器 - 修复可见性问题 */
 .video-container {
   position: relative;
   width: 100%;
   flex: 1 1 0;
-  border-radius: 0 0 0 12px;
+  border-radius: 0;
   overflow: hidden;
   background-color: #000;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   min-height: clamp(260px, 55vh, 520px);
   max-height: 100%;
+  z-index: 2;
 }
 
 .video-player {
   width: 100%;
   height: 100%;
   position: relative;
+  z-index: 3;
 }
 
-.video-player > .xgplayer {
+.video-player>.xgplayer {
   width: 100%;
   height: 100%;
+  z-index: 4;
 }
 
 .player-danmu-overlay {
@@ -258,6 +265,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -777,25 +785,26 @@ html.web-fs-active .danmu-panel {
 }
 
 /* 处理网页全屏模式 - 更强的选择器 (保留作为备份方案) */
-:deep(.xgplayer-is-fullscreen) ~ .danmu-panel,
-:deep(.xgplayer-is-cssfullscreen) ~ .danmu-panel,
-:deep(.xgplayer.xgplayer-is-fullscreen) ~ .danmu-panel,
-:deep(.xgplayer.xgplayer-is-cssfullscreen) ~ .danmu-panel,
-:deep(.xgplayer-is-fullscreen) + .danmu-panel,
-:deep(.xgplayer-is-cssfullscreen) + .danmu-panel,
+:deep(.xgplayer-is-fullscreen)~.danmu-panel,
+:deep(.xgplayer-is-cssfullscreen)~.danmu-panel,
+:deep(.xgplayer.xgplayer-is-fullscreen)~.danmu-panel,
+:deep(.xgplayer.xgplayer-is-cssfullscreen)~.danmu-panel,
+:deep(.xgplayer-is-fullscreen)+.danmu-panel,
+:deep(.xgplayer-is-cssfullscreen)+.danmu-panel,
 .player-layout:has(:deep(.xgplayer-is-fullscreen)) .danmu-panel,
 .player-layout:has(:deep(.xgplayer-is-cssfullscreen)) .danmu-panel {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
 }
+
 /* Windows/WebView 兼容：隐藏弹幕面板 */
-.xgplayer-is-fullscreen ~ .danmu-panel,
-.xgplayer-is-cssfullscreen ~ .danmu-panel,
-.xgplayer.xgplayer-is-fullscreen ~ .danmu-panel,
-.xgplayer.xgplayer-is-cssfullscreen ~ .danmu-panel,
-.xgplayer-is-fullscreen + .danmu-panel,
-.xgplayer-is-cssfullscreen + .danmu-panel {
+.xgplayer-is-fullscreen~.danmu-panel,
+.xgplayer-is-cssfullscreen~.danmu-panel,
+.xgplayer.xgplayer-is-fullscreen~.danmu-panel,
+.xgplayer.xgplayer-is-cssfullscreen~.danmu-panel,
+.xgplayer-is-fullscreen+.danmu-panel,
+.xgplayer-is-cssfullscreen+.danmu-panel {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -814,6 +823,7 @@ html.web-fs-active .danmu-panel {
   z-index: 9999 !important;
   background-color: #000 !important;
 }
+
 /* Windows/WebView 兼容：顶层全屏容器固定与充满 */
 .xgplayer.xgplayer-is-fullscreen,
 .xgplayer.xgplayer-is-cssfullscreen,
@@ -834,6 +844,7 @@ html.web-fs-active .danmu-panel {
   border-radius: 0 !important;
   box-shadow: none !important;
 }
+
 /* Windows/WebView 兼容：移除全屏圆角与阴影 */
 .xgplayer.xgplayer-is-fullscreen,
 .xgplayer.xgplayer-is-cssfullscreen {
@@ -897,6 +908,7 @@ html.web-fs-active .danmu-panel {
   max-height: 100vh !important;
   object-fit: contain !important;
 }
+
 /* Windows/WebView 兼容：视频元素填满容器 */
 .xgplayer.xgplayer-is-fullscreen .xgplayer-video,
 .xgplayer.xgplayer-is-cssfullscreen .xgplayer-video {
@@ -953,7 +965,8 @@ html.web-fs-active .danmu-panel {
 }
 
 /* 空播放器状态 */
-.empty-player, .error-player {
+.empty-player,
+.error-player {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1038,11 +1051,9 @@ html.web-fs-active .danmu-panel {
   position: absolute;
   inset: calc(var(--loader-stroke) * -0.5);
   border-radius: 50%;
-  background: conic-gradient(
-    var(--loader-accent) 0deg,
-    var(--loader-accent) 140deg,
-    rgba(255, 255, 255, 0) 140deg
-  );
+  background: conic-gradient(var(--loader-accent) 0deg,
+      var(--loader-accent) 140deg,
+      rgba(255, 255, 255, 0) 140deg);
   mask: radial-gradient(farthest-side, rgba(0, 0, 0, 0) calc(100% - var(--loader-stroke) * 2.25), #000 calc(100% - var(--loader-stroke) * 1.9));
   animation: spinner-spin 0.9s linear infinite;
 }
@@ -1086,16 +1097,20 @@ html.web-fs-active .danmu-panel {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
 
 @keyframes spinner-dot-bloom {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -55%) scale(0.94);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
   }
+
   50% {
     transform: translate(-50%, -55%) scale(1.06);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.24);
@@ -1103,10 +1118,13 @@ html.web-fs-active .danmu-panel {
 }
 
 @keyframes spinner-ambient {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.35;
     transform: scale(0.96);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(1.02);
@@ -1128,16 +1146,18 @@ html.web-fs-active .danmu-panel {
   opacity: 0.8;
 }
 
-.error-player .retry-btn, 
-.offline-player .retry-btn { /* Ensure .offline-player .retry-btn also uses these styles */
-  margin-top: 25px; /* Increased margin-top slightly */
-  padding: 12px 28px; 
-  background-color: #FB7299; 
+.error-player .retry-btn,
+.offline-player .retry-btn {
+  /* Ensure .offline-player .retry-btn also uses these styles */
+  margin-top: 25px;
+  /* Increased margin-top slightly */
+  padding: 12px 28px;
+  background-color: #FB7299;
   color: white;
   border: none;
-  border-radius: 10px; 
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1.05em; 
+  font-size: 1.05em;
   font-weight: 500;
   transition: all 0.25s ease;
   box-shadow: 0 4px 12px rgba(251, 114, 153, 0.2);
@@ -1145,8 +1165,8 @@ html.web-fs-active .danmu-panel {
 
 .error-player .retry-btn:hover,
 .offline-player .retry-btn:hover {
-  background-color: #e06387; 
-  transform: translateY(-2px); 
+  background-color: #e06387;
+  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(251, 114, 153, 0.3);
 }
 
@@ -1259,7 +1279,8 @@ html.web-fs-active .danmu-panel {
 }
 
 .offline-icon svg {
-  color: #727272; /* A softer color for the icon */
+  color: #727272;
+  /* A softer color for the icon */
   margin-bottom: 16px;
 }
 
@@ -1276,7 +1297,8 @@ html.web-fs-active .danmu-panel {
 
 .streamer-info-offline {
   width: 100%;
-  max-width: 700px; /* Limit width of streamer info bar */
+  max-width: 700px;
+  /* Limit width of streamer info bar */
   margin-bottom: 30px;
   /* Add styles to ensure it looks good above the offline message */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1285,12 +1307,14 @@ html.web-fs-active .danmu-panel {
 
 /* Day Mode Styles */
 :root[data-theme="light"] .player-page {
-  background: var(--primary-bg, #f0f2f5); /* Light background */
+  background: var(--primary-bg, #f0f2f5);
+  /* Light background */
 }
 
 :root[data-theme="light"] .player-container {
   background-color: var(--content-bg-light, #ffffff);
-  backdrop-filter: none; /* Remove blur for light mode if desired, or adjust */
+  backdrop-filter: none;
+  /* Remove blur for light mode if desired, or adjust */
   -webkit-backdrop-filter: none;
   border: 1px solid var(--border-color-light, #e0e0e0);
   border-right: none;
@@ -1307,7 +1331,8 @@ html.web-fs-active .danmu-panel {
 }
 
 :root[data-theme="light"] .danmu-panel:hover {
-  transform: translateY(-2px); /* Subtle lift */
+  transform: translateY(-2px);
+  /* Subtle lift */
   box-shadow: var(--content-shadow-light-hover, 0 6px 16px rgba(0, 0, 0, 0.12));
 }
 

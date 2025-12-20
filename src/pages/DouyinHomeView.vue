@@ -52,7 +52,6 @@ function onCategorySelected(evt: CategorySelectedEvent) {
   width: 100%;
   background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-color-light);
   z-index: 10;
   overflow: hidden;
 }

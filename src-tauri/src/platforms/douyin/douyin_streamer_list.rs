@@ -180,11 +180,16 @@ pub async fn fetch_douyin_partition_rooms(
                     });
                 }
 
-                // New has_more logic: true if we received exactly 'count' items
-                let has_more = received_rooms_count == (count as usize);
+                // Use API-provided has_more when available; fallback to length check
+                let api_has_more = api_response.data.has_more.unwrap_or(false);
+                let has_more = api_has_more || received_rooms_count == (count as usize);
 
-                // New next_offset logic: current offset + number of items requested for a page
-                let next_offset_for_frontend = offset + count;
+                // Prefer API offset if it moves forward; otherwise increment by received count
+                let next_offset_for_frontend = if api_response.data.offset > offset {
+                    api_response.data.offset
+                } else {
+                    offset + (received_rooms_count as i32)
+                };
 
                 Ok(DouyinLiveListResponse {
                     rooms: frontend_rooms,

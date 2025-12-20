@@ -66,6 +66,14 @@ watch(() => props.src, () => {
   width: 100%;
   height: 100%;
   z-index: 1;
+  animation: shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.12) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
 }
 
 .image-error-placeholder {
@@ -83,9 +91,20 @@ watch(() => props.src, () => {
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.smooth-img.fade-in {
+  opacity: 1;
 }
 
 .error-icon {
   opacity: 0.5;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 </style>

@@ -182,7 +182,7 @@ const handleFullscreenChange = (isFullscreen: boolean) => {
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  padding: 12px;
+  padding: 0;
   background: transparent;
 }
 

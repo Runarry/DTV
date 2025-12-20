@@ -25,11 +25,10 @@
       >
         <motion.a
           :href="href"
-          class="nav-item"
-          :class="{ 'is-active': isActive }"
+          :class="['nav-item', `nav-${item.key}`, { 'is-active': isActive }]"
           @click="(event) => handleNavClick(event, navigate, item.path)"
           :ref="(el) => setNavItemRef(item.key, el)"
-          whileHover="{ scale: 1.02 }"
+          whileHover="{ scale: 1 }"
           whileTap="{ scale: 0.98 }"
         >
           <div class="nav-content">
@@ -84,10 +83,10 @@ type NavItem = {
 };
 
 const navItems = ref<NavItem[]>([
-  { key: 'douyu', name: '斗鱼', path: '/', logo: douyuLogo },
-  { key: 'douyin', name: '抖音', path: '/douyin', logo: douyinLogo },
-  { key: 'huya', name: '虎牙', path: '/huya', logo: huyaLogo },
-  { key: 'bilibili', name: 'B站', path: '/bilibili', logo: bilibiliLogo },
+  { key: 'douyu', name: '斗鱼直播', path: '/', logo: douyuLogo },
+  { key: 'douyin', name: '抖音直播', path: '/douyin', logo: douyinLogo },
+  { key: 'huya', name: '虎牙直播', path: '/huya', logo: huyaLogo },
+  { key: 'bilibili', name: 'B站直播', path: '/bilibili', logo: bilibiliLogo },
 ]);
 
 const props = withDefaults(defineProps<{
@@ -206,36 +205,36 @@ defineExpose({ router });
 
 <style scoped>
 .app-sidebar {
-  width: 280px;
+  width: 230px;
   background: transparent;
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 10px;
   gap: 24px;
   z-index: 100;
 }
 
 .sidebar-header {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  margin-bottom: 8px;
+  height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 /* Redesign Nav Items */
 .navigation {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   position: relative;
+  margin-top: 0;
 }
 
 .nav-shared-highlight {
   position: absolute;
   left: 0;
   right: 0;
-  background: var(--hover-bg);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-md);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
@@ -243,27 +242,33 @@ defineExpose({ router });
 }
 
 .nav-item {
+  --nav-accent-rgb: 0, 218, 198;
   position: relative;
   display: flex;
   align-items: center;
-  padding: 14px 18px;
+  padding: 10px 16px;
   border-radius: var(--radius-md);
   color: var(--secondary-text);
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: transparent;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(245, 248, 252, 0.9));
   z-index: 1;
+  overflow: hidden;
+  box-shadow: none;
 }
 
 .nav-item:hover {
   color: var(--primary-text);
+  background: var(--hover-bg);
 }
 
 .nav-item.is-active {
-  color: var(--accent-text);
+  color: var(--primary-text);
   font-weight: 700;
-  background: var(--accent-gradient);
-  box-shadow: 0 10px 30px rgba(191, 255, 0, 0.2);
+  background: linear-gradient(155deg, rgba(var(--nav-accent-rgb), 0.22), rgba(255, 255, 255, 0.92));
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .nav-content {
@@ -273,12 +278,17 @@ defineExpose({ router });
 }
 
 .nav-icon {
-  width: 26px;
-  height: 26px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  box-shadow: none;
 }
 
 .nav-icon img {
@@ -288,14 +298,76 @@ defineExpose({ router });
   transition: all 0.3s ease;
 }
 
+.nav-item:hover .nav-icon {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.nav-item.is-active .nav-icon {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+}
+
 .nav-item.is-active .nav-icon img,
 .nav-item:hover .nav-icon img {
-  filter: brightness(0) saturate(100%) invert(0);
+  filter: brightness(1.05) saturate(1.1);
 }
 
 /* In light mode, revert invert if needed, but for accent color text, usually dark text on bright green */
 html[data-theme="light"] .nav-item.is-active .nav-icon img {
-  filter: brightness(0.2);
+  filter: drop-shadow(0 4px 10px rgba(0, 128, 128, 0.25));
+}
+
+html[data-theme="light"] .nav-icon {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme="light"] .nav-item:hover .nav-icon {
+  background: rgba(var(--nav-accent-rgb), 0.14);
+}
+
+html[data-theme="light"] .nav-item.is-active .nav-icon {
+  background: rgba(var(--nav-accent-rgb), 0.18);
+}
+
+/* Per-platform accent colors (deeper tones) */
+.nav-item.nav-douyu { --nav-accent-rgb: 234, 120, 30; }
+.nav-item.nav-douyin { --nav-accent-rgb: 110, 64, 200; }
+.nav-item.nav-huya { --nav-accent-rgb: 215, 140, 20; }
+.nav-item.nav-bilibili { --nav-accent-rgb: 60, 130, 240; }
+
+.active-dot {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(var(--nav-accent-rgb), 0.9);
+  display: none;
+}
+
+.nav-item.is-active .active-dot {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-item {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .nav-item.is-active {
+    background: linear-gradient(155deg, rgba(var(--nav-accent-rgb), 0.28), rgba(255, 255, 255, 0.08));
+  }
+  .nav-icon {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .nav-item.is-active .nav-icon {
+    background: rgba(255, 255, 255, 0.16);
+  }
 }
 
 .nav-name {
@@ -310,19 +382,18 @@ html[data-theme="light"] .nav-item.is-active .nav-icon img {
 .follow-list-wrapper {
   flex: 1;
   overflow: hidden;
-  margin-top: 16px;
-  padding: 0 2px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .follow-list-component {
   height: 100%;
-  padding: 16px 8px;
+  padding: 0;
+}
+
+:global(:root:not([data-theme="light"])) .app-sidebar {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 :deep(.follow-list-component::-webkit-scrollbar) {

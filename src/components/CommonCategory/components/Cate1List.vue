@@ -28,49 +28,49 @@ defineProps<{
   overflow-x: auto;
   background: transparent;
   flex-shrink: 0;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: 12px 0 6px;
   transition: all 0.2s ease;
 }
 
 .cate1-list {
   list-style: none;
   margin: 0;
-  padding: 0 32px;
+  padding: 0 24px;
   display: flex;
   gap: 16px;
   flex-wrap: nowrap;
 }
 
 .cate1-item {
-  padding: 10px 24px;
+  height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 100px;
   white-space: nowrap;
   color: var(--secondary-text);
-  background: var(--glass-bg);
+  background: var(--hover-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: none;
+  box-shadow: none;
 }
 
 .cate1-item:hover {
   background: var(--hover-bg);
   color: var(--primary-text);
-  border-color: var(--accent-color);
   transform: translateY(-1px);
 }
 
 .cate1-item.selected {
-  background: var(--accent-gradient);
-  color: var(--accent-text);
+  background: #2c3036;
+  color: #f8fafc;
   font-weight: 700;
-  border-color: transparent;
-  box-shadow: 0 8px 24px rgba(191, 255, 0, 0.2);
+  box-shadow: none;
 }
 
 .cate1-name {
@@ -80,5 +80,10 @@ defineProps<{
 
 .cate1-list-container::-webkit-scrollbar {
   height: 0;
+}
+
+:root[data-theme="light"] .cate1-item.selected {
+  background: #e4e9e5;
+  color: #111827;
 }
 </style>

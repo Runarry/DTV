@@ -1,8 +1,8 @@
 <template>
-    <div class="follow-list">
-      <div class="list-header">
-        <h3 class="header-title">关注列表</h3>
-        <div class="header-actions">
+  <div class="follow-list">
+    <div class="list-header">
+      <h3 class="header-title">关注列表</h3>
+      <div class="header-actions">
           <button 
             v-if="!isRefreshing"
             @click="refreshList" 
@@ -53,7 +53,15 @@
 
       </div>
       
-      <div class="list-content" ref="listRef">
+      <div class="list-content" ref="listRef" @scroll="handleListScroll">
+        <motion.div
+          class="hover-highlight"
+          :initial="hoverHighlightInitial"
+          :animate="hoverHighlightMotion"
+          :transition="hoverHighlightTransition"
+          aria-hidden="true"
+          :style="{ borderRadius: '12px', minHeight: '38px' }"
+        />
         <div v-if="listItems.length === 0" class="empty-state">
           <div class="empty-image">
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart">
@@ -63,12 +71,14 @@
           <h3 class="empty-title">暂无关注主播</h3>
           <p class="empty-text">关注主播后，他们会出现在这里</p>
         </div>
-        
+
         <TransitionGroup 
           v-else 
           tag="ul" 
           name="streamer-list"
           class="streamers-list"
+          ref="streamersListRef"
+          @mouseleave="handleListMouseLeave"
           :class="{ 'dragging-streamer': isDragging && draggedItemType === 'streamer' }"
         >
           <li
@@ -81,6 +91,9 @@
               'is-streamer': item.type === 'streamer'
             }"
             @mousedown="handleMouseDown($event, index)"
+            @mouseenter="handleItemMouseEnter(index)"
+            @mouseleave="handleItemMouseLeave(index)"
+            :ref="(el) => setListItemRef(index, el)"
           >
             <!-- 文件夹项 -->
             <FolderItem
@@ -170,7 +183,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
+  import { ref, onMounted, computed, watch, onUnmounted, nextTick, reactive } from 'vue';
   import type { FollowedStreamer, LiveStatus } from '../../platforms/common/types';
   import { Platform } from '../../platforms/common/types';
   // import type { DouyuRoomInfo } from '../../platforms/douyu/types'; // No longer needed here
@@ -186,12 +199,30 @@
   import FolderContextMenu from './FolderContextMenu.vue';
   import { useImageProxy } from './useProxy';
   import { useFollowStore, type FollowListItem } from '../../store/followStore';
+  import { motion } from 'motion-v';
 
   const expandBtnRef = ref<HTMLButtonElement | null>(null)
   const overlayAlignTop = ref<number>(64)
   const overlayAlignLeft = ref<number>(240)
   
   const followStore = useFollowStore();
+  const streamersListRef = ref<HTMLElement | null>(null);
+  const hoveredIndex = ref<number | null>(null);
+  const hoverHighlight = reactive({ x: 0, y: 0, width: 0, height: 0, visible: false });
+  const hoverHighlightInitial = { x: 0, y: 0, width: 0, height: 32, opacity: 0 };
+  const hoverHighlightTransition = { type: 'spring', stiffness: 280, damping: 28, mass: 0.7 };
+  const itemRefs = new Map<number, HTMLElement>();
+  const layoutMode = computed<'full' | 'icons'>(() => {
+    const width = streamersListRef.value?.clientWidth || 0;
+    return width <= 140 ? 'icons' : 'full';
+  });
+  const hoverHighlightMotion = computed(() => ({
+    x: hoverHighlight.x,
+    y: hoverHighlight.y,
+    width: hoverHighlight.width,
+    height: hoverHighlight.height,
+    opacity: hoverHighlight.visible ? 1 : 0,
+  }));
   
   // Updated DouyinRoomInfo to match the Rust struct DouyinFollowListRoomInfo
   // interface DouyinRoomInfo { // This will be the type for `data` from invoke
@@ -445,10 +476,86 @@
     }
   });
 
+  watch(listItems, () => {
+    itemRefs.clear();
+    hoveredIndex.value = null;
+    hoverHighlight.visible = false;
+    nextTick(() => recomputeHoverHighlight());
+  });
+
   // 自定义文件夹
   const createNewFolder = () => {
     const name = `新文件夹 ${followStore.folders.length + 1}`;
     followStore.createFolder(name);
+  };
+
+  const recomputeHoverHighlight = () => {
+    const index = hoveredIndex.value;
+    if (index === null) {
+      hoverHighlight.visible = false;
+      return;
+    }
+    const listEl = listRef.value;
+    const itemEl = itemRefs.get(index);
+    if (!listEl || !itemEl) {
+      hoverHighlight.visible = false;
+      return;
+    }
+    const listRect = listEl.getBoundingClientRect();
+    const itemRect = itemEl.getBoundingClientRect();
+    const isIcons = layoutMode.value === 'icons';
+    hoverHighlight.x = isIcons ? 0 : (itemRect.left - listRect.left);
+    hoverHighlight.y = itemRect.top - listRect.top;
+    hoverHighlight.width = isIcons ? listRect.width : itemRect.width;
+    hoverHighlight.height = itemRect.height;
+    hoverHighlight.visible = true;
+  };
+
+  const setListItemRef = (index: number, el: any) => {
+    if (!el) {
+      itemRefs.delete(index);
+      return;
+    }
+    const element = el?.$el ?? el;
+    if (element instanceof HTMLElement) {
+      itemRefs.set(index, element);
+      if (hoveredIndex.value === index) {
+        nextTick(recomputeHoverHighlight);
+      }
+    }
+  };
+
+  const handleItemMouseEnter = (index: number) => {
+    const item = listItems.value[index];
+    if (!item || item.type !== 'streamer') {
+      hoveredIndex.value = null;
+      hoverHighlight.visible = false;
+      return;
+    }
+    hoveredIndex.value = index;
+    nextTick(recomputeHoverHighlight);
+  };
+
+  const handleItemMouseLeave = (index: number) => {
+    if (hoveredIndex.value === index) {
+      hoveredIndex.value = null;
+      hoverHighlight.visible = false;
+    }
+  };
+
+  const handleListMouseLeave = () => {
+    hoveredIndex.value = null;
+    hoverHighlight.visible = false;
+  };
+
+  const handleWindowResize = () => {
+    nextTick(() => recomputeHoverHighlight());
+  };
+
+  const handleListScroll = () => {
+    if (hoverHighlight.visible) {
+      recomputeHoverHighlight();
+    }
   };
   
   // 文件夹展开/折叠
@@ -1098,6 +1205,9 @@
     if (!followStore.listOrder.length && props.followedAnchors.length > 0) {
       followStore.initializeListOrder();
     }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleWindowResize);
+    }
     
     // 在初次渲染前，若包含 B 站主播则先启动静态代理，避免头像首次以原始地址加载导致 403
     const hasBili = props.followedAnchors.some(s => s.platform === Platform.BILIBILI);
@@ -1110,6 +1220,9 @@
   
   onUnmounted(() => {
     clearAnimationTimeout();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', handleWindowResize);
+    }
   });
   </script>
   

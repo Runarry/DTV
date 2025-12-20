@@ -1,8 +1,13 @@
 <template>
   <div class="common-live-list-container">
     <div v-if="isLoading && rooms.length === 0" class="loading-initial-state">
-      <div class="loading-spinner"></div>
-      <p>正在加载主播列表...</p>
+      <div class="skeleton-grid">
+        <div v-for="n in 8" :key="n" class="skeleton-card">
+          <div class="skeleton-thumb skeleton-shimmer"></div>
+          <div class="skeleton-line skeleton-shimmer"></div>
+          <div class="skeleton-line short skeleton-shimmer"></div>
+        </div>
+      </div>
     </div>
     <div v-else-if="!isLoading && rooms.length === 0 && categoryHref" class="no-streamers-state">
       <p>分类下暂无主播</p>
@@ -232,9 +237,9 @@ const goToPlayer = (roomId: string) => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 60px;
+  padding: 24px;
   color: var(--secondary-text);
-  gap: 16px;
+  gap: 12px;
 }
 
 .loading-initial-state { flex-grow: 1; }
@@ -242,7 +247,7 @@ const goToPlayer = (roomId: string) => {
 .live-grid-scroll-area {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 32px;
+  padding: 6px;
   --squircle-radius: 1%;
 }
 
@@ -258,7 +263,7 @@ const goToPlayer = (roomId: string) => {
 .live-grid-common {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
+  gap: 10px;
 }
 
 .card-shadow-wrapper {
@@ -268,11 +273,11 @@ const goToPlayer = (roomId: string) => {
 
 .card-shadow-wrapper:hover {
   transform: translateY(-6px);
-  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4));
+  filter: none;
 }
 
 .streamer-card-common {
-  background: var(--glass-bg);
+  background: var(--hover-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   clip-path: url(#squircle-clip);
@@ -288,6 +293,65 @@ const goToPlayer = (roomId: string) => {
 
 .streamer-card-common:hover {
   background: var(--hover-bg);
+}
+
+.skeleton-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.skeleton-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--squircle-radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--squircle-radius);
+  background: var(--skeleton-bg);
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--skeleton-bg);
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 25%, rgba(255, 255, 255, 0.2) 50%, transparent 75%);
+  transform: translateX(-100%);
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+:global(:root:not([data-theme="light"])) .streamer-card-common {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .card-preview-common {
@@ -386,6 +450,16 @@ const goToPlayer = (roomId: string) => {
   font-size: 11px;
   color: var(--secondary-text);
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.nickname-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .loading-spinner, .mini-spinner {

@@ -40,38 +40,35 @@
   justify-content: flex-start;
   width: 100%;
   user-select: none;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border-radius: 14px;
+  transition: all 0.2s ease;
+  border-radius: 0;
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  margin-bottom: 2px;
+  border: none;
+  background: transparent;
+  margin-bottom: 0;
 }
 
 .streamer-item-content:hover {
-  background: var(--hover-bg);
-  border-color: var(--accent-color);
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 12px 24px rgba(139, 92, 246, 0.15);
-  z-index: 10;
+  background: transparent;
+  border-color: transparent;
+  transform: none;
+  z-index: 1;
 }
 
 .item-content {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  gap: 14px;
+  padding: 4px 6px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
   z-index: 2;
 }
 
 .avatar-container {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   position: relative;
   flex: 0 0 auto;
@@ -83,7 +80,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 1px solid var(--border-color);
   background: var(--tertiary-bg);
   transition: all 0.3s ease;
 }
@@ -115,7 +112,7 @@
 .avatar-fallback {
   font-size: 14px;
   font-weight: 700;
-  color: var(--accent-color);
+  color: var(--primary-text);
   width: 100%;
   height: 100%;
   display: flex;
@@ -135,11 +132,12 @@
 .nickname {
   font-weight: 700;
   color: var(--primary-text);
-  font-size: 14px;
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  transition: color 0.2s ease;
 }
 
 .secondary-row {
@@ -151,6 +149,24 @@
   font-weight: 500;
   margin-top: 3px;
   opacity: 0.8;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.streamer-item-content:hover .nickname {
+  color: #f8fafc;
+}
+
+.streamer-item-content:hover .secondary-row {
+  color: #e2e8f0;
+  opacity: 1;
+}
+
+:root[data-theme="light"] .streamer-item-content:hover .nickname {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .streamer-item-content:hover .secondary-row {
+  color: #334155;
 }
 
 .status-container {
@@ -169,11 +185,10 @@
   border-radius: 20px;
   padding: 3px 10px;
   background: var(--tertiary-bg);
-  color: var(--accent-color);
+  color: var(--primary-text);
   font-size: 10px;
   font-weight: 800;
   border: 1px solid var(--border-color);
-  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.1);
 }
 
 .live-indicator {

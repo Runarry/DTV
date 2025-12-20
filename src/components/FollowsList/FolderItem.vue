@@ -57,53 +57,21 @@
         v-if="folder.expanded && folderItems.length > 0"
         class="folder-content"
         :class="{ 'disable-pointer': globalDragging }"
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        :variants="{
-          hidden: { height: 0, opacity: 0 },
-          visible: { 
-            height: 'auto', 
-            opacity: 1,
-            transition: {
-              height: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
-              opacity: { duration: 0.2 },
-              staggerChildren: 0.025,
-              delayChildren: 0.015
-            }
-          },
-          exit: { 
-            height: 0, 
-            opacity: 0,
-            transition: {
-              height: { duration: 0.18, ease: [0.64, 0, 0.78, 0] },
-              opacity: { duration: 0.12 },
-              staggerChildren: 0.015,
-              staggerDirection: -1
-            }
-          }
-        }"
-      >
+        :initial="{ height: 0, opacity: 0 }"
+        :animate="{ height: 'auto', opacity: 1 }"
+        :exit="{ height: 0, opacity: 0 }"
+        :transition="{ duration: 0.22, ease: [0.25, 0.8, 0.4, 1] }"
+        >
         <ul class="folder-streamers-list">
           <motion.li
             v-for="streamer in folderItems"
             :key="`${streamer.platform}:${streamer.id}`"
             class="folder-streamer-item"
             :class="getStreamerItemClass(streamer)"
-            :variants="{
-              hidden: { opacity: 0, y: -6, scale: 0.98 },
-              visible: { 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-                transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] }
-              },
-              exit: { 
-                opacity: 0, 
-                scale: 0.98,
-                transition: { duration: 0.12 }
-              }
-            }"
+            :initial="{ opacity: 0, y: -4 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :exit="{ opacity: 0, y: -4 }"
+            :transition="{ duration: 0.18, ease: [0.25, 0.8, 0.4, 1] }"
             @click.stop="handleClick(streamer)"
             @mousedown.stop="(e) => handleFolderStreamerMouseDown(streamer, e)"
             @mouseup.stop="handleFolderStreamerMouseUp"
@@ -375,6 +343,11 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
   transform: scale(1.02);
 }
 
+.folder-item.is-drag-over {
+  border: 1px solid var(--accent-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 35%, transparent);
+}
+
 .folder-header {
   display: flex;
   align-items: center;
@@ -390,6 +363,11 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
 .folder-header:hover {
   background: var(--hover-bg);
   border-color: var(--accent-color);
+}
+
+.folder-item.is-drag-over .folder-header {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 28%, transparent);
 }
 
 .folder-icon {
@@ -414,6 +392,7 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
   text-overflow: ellipsis;
   white-space: nowrap;
   letter-spacing: 0.02em;
+  transition: color 0.2s ease;
 }
 
 .folder-count {
@@ -425,6 +404,7 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
   border-radius: 20px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 6px rgba(139, 92, 246, 0.05);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .expand-icon {
@@ -462,5 +442,24 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
 
 .folder-streamer-item:hover {
   background: var(--hover-bg);
+}
+
+.folder-header:hover .folder-name {
+  color: #f8fafc;
+}
+
+.folder-header:hover .folder-count {
+  color: #f8fafc;
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="light"] .folder-header:hover .folder-name {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .folder-header:hover .folder-count {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.04);
 }
 </style>

@@ -47,8 +47,10 @@ const handleClosePlayer = () => {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   width: 100%;
   background-color: #0e0e10; /* Twitch-like dark background */
+  align-items: stretch;
 }
 </style> 

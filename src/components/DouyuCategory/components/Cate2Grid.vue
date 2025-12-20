@@ -164,7 +164,7 @@ const formatCategoryName = (name: string) => {
 
 <style scoped>
 .cate2-container {
-  padding: 12px 16px;
+  padding: 8px 16px 12px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -229,11 +229,10 @@ const formatCategoryName = (name: string) => {
 }
 
 .cate2-card.active { 
-  background: var(--accent-gradient);
-  border-color: transparent;
-  color: #fff;
+  background: #2c3036;
+  border-color: #3b4147;
+  color: #f8fafc;
   font-weight: 600;
-  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
 }
 
 .cate2-icon {
@@ -251,6 +250,12 @@ const formatCategoryName = (name: string) => {
 
 .cate2-card.active .cate2-icon img {
   filter: brightness(0) invert(1);
+}
+
+:root[data-theme="light"] .cate2-card.active {
+  background: #e4e9e5;
+  border-color: #cfd3cf;
+  color: #111827;
 }
 
 .cate2-info {

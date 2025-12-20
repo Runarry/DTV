@@ -7,8 +7,12 @@
           <p v-else>暂无弹幕或连接中...</p> <!-- Simplified placeholder -->
         </div>
 
-        <div v-for="(danmaku, idx) in renderMessages" :key="danmaku.id || `${danmaku.room_id || ''}-${danmaku.nickname}-${danmaku.content}-${idx}`" 
-             :class="['danmu-item', { 'system-message': danmaku.isSystem, 'success': danmaku.isSystem && danmaku.type === 'success' }]"
+        <div
+          v-for="(danmaku, idx) in renderMessages"
+          :key="danmaku.id || `${danmaku.room_id || ''}-${danmaku.nickname}-${danmaku.content}-${idx}`" 
+          :class="['danmu-item', { 'system-message': danmaku.isSystem, 'success': danmaku.isSystem && danmaku.type === 'success' }]"
+          @click="copyDanmaku(danmaku)"
+          title="点击复制弹幕"
         >
           <div class="danmu-meta-line" v-if="!danmaku.isSystem">
             <span v-if="danmaku.badgeName" class="danmu-badge">
@@ -17,13 +21,13 @@
             </span>
             <span class="danmu-user" :style="{ color: danmaku.color || userColor(danmaku.nickname) }">
               <span v-if="danmaku.level" class="user-level">[Lv.{{ danmaku.level }}]</span>
-              {{ danmaku.nickname }}:
+              {{ danmaku.nickname }}
             </span>
           </div>
           <div class="danmu-content-line">
             <span class="danmu-content">
               <svg v-if="danmaku.isSystem && danmaku.type === 'success'" class="inline-icon success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-              {{ danmaku.isSystem ? danmaku.nickname + ': ' : '' }}{{ danmaku.content }}
+              {{ danmaku.content }}
             </span>
           </div>
         </div>
@@ -47,20 +51,21 @@
     room_id?: string; // 补充房间ID以便 key 生成更稳定
   }
   
-  const props = defineProps<{
-    roomId: string | null;
-    messages: DanmakuUIMessage[];
-  }>();
+const props = defineProps<{
+  roomId: string | null;
+  messages: DanmakuUIMessage[];
+}>();
+
+const danmakuListEl = ref<HTMLElement | null>(null);
+const autoScroll = ref(true); 
+const userScrolled = ref(false);
+const pointerActive = ref(false);
   
-  const danmakuListEl = ref<HTMLElement | null>(null);
-  const autoScroll = ref(true); 
-  const userScrolled = ref(false);
-  
-  const userColor = (nickname: string | undefined) => {
-    if (!nickname || nickname.length === 0) {
-      const defaultHue = 0;
-      const defaultSaturation = 0;
-      const defaultLightness = 75;
+const userColor = (nickname: string | undefined) => {
+  if (!nickname || nickname.length === 0) {
+    const defaultHue = 0;
+    const defaultSaturation = 0;
+    const defaultLightness = 75;
       return `hsl(${defaultHue}, ${defaultSaturation}%, ${defaultLightness}%)`;
     }
     let hash = 0;
@@ -72,22 +77,18 @@
     return `hsl(${hue}, 70%, 75%)`;
   };
   
-  const handleScroll = () => {
-    if (!danmakuListEl.value) return;
-    const el = danmakuListEl.value;
+const isNearBottom = () => {
+  const el = danmakuListEl.value;
+  if (!el) return true;
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= 40;
+};
 
-    const isScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 20; 
-
-    if (isScrolledUp) {
-      if (!userScrolled.value) {
-        userScrolled.value = true;
-      }
-    } else {
-      if (userScrolled.value) {
-        userScrolled.value = false;
-      }
-    }
-  };
+const handleScroll = () => {
+  if (!danmakuListEl.value) return;
+  const atBottom = isNearBottom();
+  userScrolled.value = !atBottom;
+  autoScroll.value = atBottom && !pointerActive.value;
+};
   
   const scrollToBottom = () => {
     nextTick(() => {
@@ -99,34 +100,22 @@
     });
   };
 
-  watch(autoScroll, (newValue) => {
-    if (newValue) {
-      userScrolled.value = false;
-      scrollToBottomForce();
-    }
-  });
-  
-  watch(() => props.messages, (newMessages, _oldMessages) => {
-    if (newMessages && autoScroll.value && !userScrolled.value) {
-      scrollToBottom();
-    }
-  }, { deep: true });
-
-  watch(() => props.roomId, (_newRoomId, _oldRoomId) => {
+watch(autoScroll, (newValue) => {
+  if (newValue) {
     userScrolled.value = false;
-    autoScroll.value = true;
-    // scrollToBottom(); // Optionally scroll to bottom if there are initial messages for the new room
-  });
+    scrollToBottomForce();
+  }
+});
   
   const renderMessages = ref<DanmakuUIMessage[]>([]);
   const MAX_MSG = 200;
   const PRUNE_BATCH = 100;
-  const pointerActive = ref(false);
   
-  const onPointerDown = () => {
-    pointerActive.value = true;
-    autoScroll.value = false; // 用户主动拖动时暂停自动滚动
-  };
+const onPointerDown = () => {
+  pointerActive.value = true;
+  autoScroll.value = false; // 用户主动拖动时暂停自动滚动
+  userScrolled.value = true;
+};
   
   const onGlobalPointerUp = () => {
     if (pointerActive.value) {
@@ -151,36 +140,69 @@
     });
   };
 
-  watch(() => props.messages, (newMessages, _oldMessages) => {
-    const msgs = Array.isArray(newMessages) ? newMessages : [];
-    if (msgs.length > MAX_MSG) {
-      // 批量裁剪，避免频繁处理导致性能问题
-      if (msgs.length % PRUNE_BATCH === 0 || msgs.length > MAX_MSG + PRUNE_BATCH) {
-        renderMessages.value = msgs.slice(-MAX_MSG);
-      } else {
-        renderMessages.value = msgs.slice(-MAX_MSG);
-      }
+watch(() => props.messages, (newMessages, _oldMessages) => {
+  const msgs = Array.isArray(newMessages) ? newMessages : [];
+  if (msgs.length > MAX_MSG) {
+    // 批量裁剪，避免频繁处理导致性能问题
+    if (msgs.length % PRUNE_BATCH === 0 || msgs.length > MAX_MSG + PRUNE_BATCH) {
+      renderMessages.value = msgs.slice(-MAX_MSG);
     } else {
-      renderMessages.value = msgs;
+      renderMessages.value = msgs.slice(-MAX_MSG);
     }
-    if (autoScroll.value && !pointerActive.value) {
-      scrollToBottomForce();
-    }
-  }, { deep: true });
-
-  watch(() => props.roomId, (_newRoomId, _oldRoomId) => {
-    userScrolled.value = false;
-    autoScroll.value = true;
+  } else {
+    renderMessages.value = msgs;
+  }
+  if (!pointerActive.value) {
     scrollToBottomForce();
-  });
-  
-  onMounted(() => {
-    window.addEventListener('pointerup', onGlobalPointerUp);
-  });
-  
-  onUnmounted(() => {
-    window.removeEventListener('pointerup', onGlobalPointerUp);
-  });
+  } else if (autoScroll.value || isNearBottom()) {
+    scrollToBottomForce();
+  }
+}, { deep: true });
+
+watch(() => props.roomId, (_newRoomId, _oldRoomId) => {
+  userScrolled.value = false;
+  autoScroll.value = true;
+  scrollToBottomForce();
+});
+
+onMounted(() => {
+  scrollToBottomForce();
+});
+
+onMounted(() => {
+  window.addEventListener('pointerup', onGlobalPointerUp);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('pointerup', onGlobalPointerUp);
+});
+
+const copyDanmaku = async (danmaku: DanmakuUIMessage) => {
+  const parts: string[] = [];
+  if (danmaku.nickname) {
+    const levelStr = danmaku.level ? ` [Lv.${danmaku.level}]` : '';
+    parts.push(`${danmaku.nickname}${levelStr}:`);
+  }
+  parts.push(danmaku.content || '');
+  const text = parts.join(' ');
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  } catch (err) {
+    console.warn('复制弹幕失败', err);
+  }
+};
   
   </script>
   
@@ -251,38 +273,37 @@
     margin: 4px 0;
   }
   
-  .danmu-item {
-    text-align: left;
-    padding: 6px 10px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    margin-bottom: 8px;
-    box-shadow: 0 10px 22px rgba(8, 10, 22, 0.28);
-    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    max-width: 100%; 
-  }
+.danmu-item {
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin-bottom: 8px;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%; 
+  cursor: pointer;
+}
   
-  .danmu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 16px 32px rgba(8, 10, 22, 0.42);
-  }
+.danmu-item:hover {
+  transform: translateY(-2px);
+}
   
-  .danmu-meta-line {
-    font-size: 0.72rem;
-    color: rgba(204, 212, 236, 0.72);
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    letter-spacing: 0.01em;
-  }
+.danmu-meta-line {
+  font-size: 0.72rem;
+  color: rgba(204, 212, 236, 0.72);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  letter-spacing: 0.01em;
+  gap: 6px;
+}
   
   .danmu-badge {
     background: linear-gradient(135deg, rgba(92, 153, 255, 0.75), rgba(236, 112, 214, 0.68)); 
@@ -318,20 +339,30 @@
     margin-right: 5px;
   }
   
-  .danmu-content-line {
-    font-size: 0.8rem;
-    line-height: 1.4;
-  }
+.danmu-content-line {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: inline-flex;
+  max-width: 100%;
+}
 
-  .danmu-content {
-    color: rgba(244, 246, 255, 0.94); 
-    white-space: pre-wrap; 
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    font-size: 0.84rem; 
-    line-height: 1.45;
-    text-shadow: 0 1px 2px rgba(6, 9, 18, 0.6);
-  }
+.danmu-content {
+  color: rgba(244, 246, 255, 0.94); 
+  white-space: pre-wrap; 
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 0.84rem; 
+  line-height: 1.45;
+  text-shadow: 0 1px 2px rgba(6, 9, 18, 0.6);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  width: fit-content;
+  max-width: 100%;
+}
   
   .danmu-messages-area::-webkit-scrollbar {
     width: 6px;
@@ -468,18 +499,6 @@
   color: rgba(100, 116, 139, 0.85);
 }
 
-:root[data-theme="light"] .danmu-item {
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(189, 200, 224, 0.5);
-}
-
-:root[data-theme="light"] .danmu-item:hover {
-  background: rgba(235, 240, 255, 0.95);
-  transform: translateY(-2px);
-  border-color: rgba(125, 155, 238, 0.45);
-}
-
 :root[data-theme="light"] .danmu-meta-line {
   color: rgba(71, 85, 105, 0.85);
 }
@@ -496,6 +515,8 @@
 :root[data-theme="light"] .danmu-content {
   color: var(--primary-text-light, #1f2937);
   text-shadow: none;
+  background: #f1f5f9;
+  border: 1px solid #d8dde5;
 }
 
 :root[data-theme="light"] .danmu-item.system-message {

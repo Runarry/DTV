@@ -145,7 +145,6 @@ const handleCate2GridHeightChanged = () => {
   will-change: max-height;
   transform: translateZ(0);
   width: 100%;
-  border-bottom: 1px solid var(--border-color);
   position: relative;
 }
 

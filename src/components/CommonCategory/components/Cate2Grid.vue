@@ -177,7 +177,7 @@ const handleToggleInternalExpand = () => {
 
 <style scoped>
 .cate2-container {
-  padding: 20px 32px;
+  padding: 10px 24px 16px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -212,25 +212,23 @@ const handleToggleInternalExpand = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--hover-bg);
+  border: none;
   color: var(--secondary-text);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .cate2-card:hover {
   background: var(--hover-bg);
   color: var(--primary-text);
-  border-color: var(--accent-color);
   transform: scale(1.05);
 }
 
 .cate2-card.active {
-  background: var(--accent-gradient);
-  color: var(--accent-text);
+  background: #2c3036;
+  color: #f8fafc;
   font-weight: 700;
-  border-color: transparent;
-  box-shadow: 0 8px 20px rgba(191, 255, 0, 0.25);
+  box-shadow: none;
 }
 
 .cate2-name {
@@ -240,6 +238,11 @@ const handleToggleInternalExpand = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+}
+
+:root[data-theme="light"] .cate2-card.active {
+  background: #e4e9e5;
+  color: #111827;
 }
 
 .expand-button {
@@ -257,10 +260,10 @@ const handleToggleInternalExpand = () => {
   cursor: pointer;
   border-radius: 100px;
   background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
+  border: none;
   transition: all 0.2s ease;
   z-index: 5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .expand-button:hover {

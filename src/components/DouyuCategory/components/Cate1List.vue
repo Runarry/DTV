@@ -27,7 +27,7 @@ defineEmits<{
 
 <style scoped>
 .cate1-list {
-  padding: 12px;
+  padding: 10px 12px 8px;
   display: flex;
   gap: 12px;
   overflow-x: auto;
@@ -42,15 +42,18 @@ defineEmits<{
 }
 
 .cate1-item {
-  padding: 6px 14px;
+  height: 40px;
+  padding: 0 12px;
   cursor: pointer;
   transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
   font-size: 13px;
-  border-radius: 20px;
+  border-radius: var(--radius-md);
   white-space: nowrap;
   border: 1px solid rgba(90, 176, 255, 0.14);
   background: #1e2022;
   color: rgba(227, 236, 255, 0.82);
+  display: inline-flex;
+  align-items: center;
 }
 
 :root[data-theme="light"] .cate1-item {
@@ -73,18 +76,16 @@ defineEmits<{
 }
 
 .cate1-item.active {
-  background: linear-gradient(150deg, rgba(79, 209, 197, 0.35), rgba(59, 130, 246, 0.28));
-  border: 1px solid rgba(125, 211, 252, 0.45);
-  box-shadow: 0 12px 32px rgba(14, 116, 144, 0.32);
-  color: rgba(222, 255, 250, 0.95);
+  background: #2c3036;
+  border: 1px solid #3b4147;
+  color: #f8fafc;
   font-weight: 600;
 }
 
 :root[data-theme="light"] .cate1-item.active {
-  background: linear-gradient(140deg, rgba(229, 236, 255, 0.96), rgba(204, 219, 255, 0.94));
-  border-color: rgba(114, 136, 255, 0.6);
-  box-shadow: 0 12px 24px rgba(108, 130, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.48);
-  color: #162a63;
+  background: #e4e9e5;
+  border-color: #cfd3cf;
+  color: #111827;
   font-weight: 600;
 }
 </style>

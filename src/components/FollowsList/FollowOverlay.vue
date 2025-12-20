@@ -118,6 +118,12 @@ watch(() => props.isRefreshing, (newVal, oldVal) => {
   }
 });
 
+watch(() => props.show, (val) => {
+  if (val) {
+    nextTick(() => computePanelMetrics());
+  }
+});
+
 // 参考值与动态测量
 const PANEL_MIN = 220;
 const PANEL_MAX_MARGIN = 120; // 留出顶部/底部边距
@@ -192,12 +198,17 @@ function computePanelMetrics() {
 
 onMounted(() => {
   computePanelMetrics();
-  const onResize = () => computePanelMetrics();
-  window.addEventListener('resize', onResize);
-  resizeListener = onResize;
+  resizeListener = () => computePanelMetrics();
+  scrollListener = () => { if (props.show) computePanelMetrics(); };
+  window.addEventListener('resize', resizeListener);
+  window.addEventListener('scroll', scrollListener, { passive: true });
 });
 let resizeListener: ((this: Window, ev: UIEvent) => any) | null = null;
-onUnmounted(() => { if (resizeListener) window.removeEventListener('resize', resizeListener); });
+let scrollListener: ((this: Window, ev: Event) => any) | null = null;
+onUnmounted(() => { 
+  if (resizeListener) window.removeEventListener('resize', resizeListener); 
+  if (scrollListener) window.removeEventListener('scroll', scrollListener);
+});
 watch(() => props.items, () => computePanelMetrics(), { deep: true });
 watch(() => props.show, (v) => { if (v) computePanelMetrics(); });
 watch(() => props.isDeleteMode, () => computePanelMetrics());
@@ -215,7 +226,7 @@ const handleSelect = (s: FollowedStreamer) => {
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
-  z-index: 1000;
+  z-index: 1200;
 }
 
 .follow-overlay-panel {
@@ -230,6 +241,7 @@ const handleSelect = (s: FollowedStreamer) => {
   box-shadow: var(--glass-shadow);
   overflow: visible;
   transform: translateZ(0);
+  z-index: 1201;
 }
 
 .overlay-header {
@@ -359,6 +371,29 @@ const handleSelect = (s: FollowedStreamer) => {
   transform: translateY(-2px);
   border-color: var(--border-color);
   box-shadow: var(--card-shadow-hover);
+}
+
+:root[data-theme="light"] .follow-overlay-panel {
+  background: #e4e9e5;
+  border-color: #cfd3cf;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+:root[data-theme="light"] .overlay-header,
+:root[data-theme="light"] .overlay-content {
+  background: transparent;
+}
+
+:root[data-theme="light"] .overlay-streamer-item {
+  background: #e4e9e5;
+  border-color: #cfd3cf;
+}
+
+:root[data-theme="light"] .overlay-streamer-item:hover {
+  background: #d8ddd9;
+  border-color: #b8beb9;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .overlay-remove-btn {

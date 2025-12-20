@@ -152,7 +152,6 @@ onMounted(() => {
   width: 100%;
   background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-color-light);
 }
 
 .live-list-section {

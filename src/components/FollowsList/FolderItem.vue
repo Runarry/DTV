@@ -577,8 +577,8 @@ const getStreamerItemClass = (streamer: FollowedStreamer) => {
 }
 
 :root[data-theme="light"] .folder-hover-highlight {
-  background: linear-gradient(135deg, rgba(74, 103, 74, 0.12), rgba(255, 255, 255, 0.7));
-  border: 1px solid var(--border-color-light, #cbd5e1);
+  background: rgba(120, 120, 120, 0.16);
+  border: 1px solid transparent;
 }
 
 .folder-streamers-list {

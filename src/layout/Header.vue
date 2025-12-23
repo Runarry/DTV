@@ -87,7 +87,13 @@
           <path fill="currentColor" d="M12 2C6.477 2 2 6.485 2 12.02c0 4.424 2.865 8.176 6.839 9.5.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.004.071 1.532 1.034 1.532 1.034.892 1.53 2.341 1.088 2.91.833.091-.647.35-1.089.636-1.34-2.22-.253-4.555-1.113-4.555-4.951 0-1.094.39-1.988 1.029-2.688-.103-.253-.446-1.27.098-2.646 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.54 9.54 0 0 1 2.505.337c1.909-1.296 2.748-1.026 2.748-1.026.545 1.376.202 2.393.1 2.646.64.7 1.028 1.594 1.028 2.688 0 3.848-2.338 4.695-4.566 4.944.36.31.68.924.68 1.861 0 1.343-.012 2.427-.012 2.757 0 .269.18.58.688.481A10.02 10.02 0 0 0 22 12.02C22 6.485 17.523 2 12 2z"/>
         </svg>
       </button>
-      <button @click="toggleTheme" class="theme-btn" :class="{ 'theme-btn--windows': shouldShowWindowsControls }" :title="effectiveTheme === 'dark' ? '切换到日间模式' : '切换到夜间模式'" data-tauri-drag-region="none">
+      <button
+        @click="toggleTheme"
+        class="theme-btn"
+        :class="{ 'theme-btn--windows': shouldShowWindowsControls }"
+        :title="effectiveTheme === 'dark' ? '切换到日间模式' : '切换到夜间模式'"
+        data-tauri-drag-region="none"
+      >
         <Transition name="theme-icon" mode="out-in">
           <Sun v-if="effectiveTheme === 'dark'" key="sun" class="theme-icon" :stroke-width="1.8" />
           <Moon v-else key="moon" class="theme-icon" :stroke-width="1.8" />
@@ -577,7 +583,7 @@ const tryEnterRoom = (roomId: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 12px;
   background: transparent;
   height: 80px;
   box-sizing: border-box;
@@ -741,6 +747,43 @@ const tryEnterRoom = (roomId: string) => {
   transform: none;
 }
 
+.header-actions--windows {
+  position: relative;
+  padding-right: 0;
+  height: 100%;
+  align-self: stretch;
+}
+
+.header-actions--windows :deep(.win-controls) {
+  position: absolute;
+  top: 0;
+  right: -24px;
+}
+
+.header-actions--windows .search-box {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 18px;
+  margin-top: 18px;
+}
+
+.header-actions--windows .search-input {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.header-actions--windows .search-button {
+  width: 26px;
+  height: 26px;
+}
+
+.header-actions--windows .theme-btn,
+.header-actions--windows .github-btn {
+  width: 34px;
+  height: 34px;
+  margin-top: 18px;
+}
+
 .platforms {
   display: flex;
   gap: 10px;
@@ -870,6 +913,30 @@ const tryEnterRoom = (roomId: string) => {
 :root[data-theme="dark"] .github-btn {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.16);
+}
+
+:root[data-theme="light"] .platforms-wrapper,
+:root[data-theme="light"] .search-box,
+:root[data-theme="light"] .theme-btn,
+:root[data-theme="light"] .github-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: transparent;
+  color: #1f2937;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .platform-pill.is-active {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme="light"] .platforms-highlight {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme="light"] .search-input::placeholder {
+  color: #6b7280;
 }
 
 .mini-spinner {

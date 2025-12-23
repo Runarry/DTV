@@ -18,11 +18,11 @@ html[data-theme="light"] {
   --border-color: #d1d8d2;
   --border-color-light: #e4e9e5;
 
-  --glass-bg: rgba(230, 233, 231, 0.72);
+  --glass-bg: rgba(240, 244, 242, 0.82);
   --glass-border: rgba(255, 255, 255, 0.42);
   --glass-blur: blur(20px);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-  --content-panel-bg: rgba(246, 248, 247, 0.43);
+  --content-panel-bg: rgba(245, 248, 246, 0.99);
 
   --color-card: #ffffff66;
   --color-border: #fff;
@@ -39,13 +39,12 @@ html[data-theme="light"] {
 
   --page-mesh: radial-gradient(at 0% 0%, rgba(120, 128, 126, 0.06) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(120, 128, 126, 0.04) 0px, transparent 50%);
-  --ambient-bg-image: url('../assets/images/sidebar-bg.webp');
-  --ambient-bg-opacity: 0.32;
-  --ambient-bg-filter: blur(18px) saturate(0.92) brightness(0.82);
+  --ambient-bg-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.55) 100%);
+  --ambient-bg-opacity: 1;
+  --ambient-bg-filter: none;
 
-  --sidebar-overlay: linear-gradient(180deg, rgba(240, 242, 241, 0.78), rgba(218, 224, 222, 0.6)),
-    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.2), transparent 60%);
-  --sidebar-overlay-opacity: 0.75;
+  --sidebar-overlay: linear-gradient(0deg, rgba(245, 248, 246, 0.75), rgba(245, 248, 246, 0.75));
+  --sidebar-overlay-opacity: 0.95;
 }
 
 html[data-theme="dark"] {
@@ -69,7 +68,7 @@ html[data-theme="dark"] {
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-blur: blur(40px);
   --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --content-panel-bg: rgba(11, 11, 10, 0.88);
+  --content-panel-bg: rgba(6, 8, 7, 0.90);
 
   --color-card: #ffffff66;
   --color-border: #fff;
@@ -92,13 +91,12 @@ html[data-theme="dark"] {
 
   --page-mesh: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.02) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(0, 0, 0, 0.35) 0px, transparent 50%);
-  --ambient-bg-image: url('../assets/images/sidebar-bg-dark.webp');
-  --ambient-bg-opacity: 0.48;
-  --ambient-bg-filter: blur(18px) saturate(0.95) brightness(0.7);
+  --ambient-bg-image: linear-gradient(0deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.18));
+  --ambient-bg-opacity: 1;
+  --ambient-bg-filter: none;
 
-  --sidebar-overlay: linear-gradient(180deg, rgba(8, 10, 12, 0.9), rgba(14, 16, 18, 0.7)),
-    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.04), transparent 55%);
-  --sidebar-overlay-opacity: 0.75;
+  --sidebar-overlay: linear-gradient(0deg, rgba(3, 5, 6, 0.94), rgba(3, 5, 6, 0.90));
+  --sidebar-overlay-opacity: 0.84;
 }
 
 body {

@@ -12,6 +12,7 @@ target/
 Cargo.lock
 .cargo/
 src-tauri/gen/android/
+src-tauri/keys/private.key
 next-env.d.ts
 
 # macOS

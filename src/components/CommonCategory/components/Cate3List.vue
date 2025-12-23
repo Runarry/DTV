@@ -56,7 +56,7 @@ const selectAll = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 2px 24px 0 24px;
+  margin: 2px 12px 0 12px;
   padding-bottom: 4px;
 }
 
@@ -103,10 +103,14 @@ const selectAll = () => {
 }
 
 :root[data-theme="light"] .cate3-item {
-  color: color-mix(in srgb, var(--primary-text) 85%, var(--secondary-text) 15%);
+  color: #7b877f;
+  background: rgba(236, 240, 237, 0.92);
+  border: 1px solid transparent;
 }
 
 :root[data-theme="light"] .cate3-item.active {
-  color: var(--primary-text);
+  color: #1f2937;
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid transparent;
 }
 </style>

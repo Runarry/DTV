@@ -1,7 +1,7 @@
 {
   "name": "dtv",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "@tauri-apps/api": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2.4.0",
     "@tauri-apps/plugin-os": "^2.3.0",
+    "@tauri-apps/plugin-updater": "^2.3.0",
     "@vueuse/core": "^12.5.0",
     "danmu.js": "1.1.13-douyin-1.5",
     "lucide-vue-next": "^0.546.0",

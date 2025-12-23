@@ -35,7 +35,7 @@ defineProps<{
 .cate1-list {
   list-style: none;
   margin: 0;
-  padding: 0 24px;
+  padding: 0 12px;
   display: flex;
   gap: 16px;
   flex-wrap: nowrap;
@@ -82,11 +82,15 @@ defineProps<{
 }
 
 :root[data-theme="light"] .cate1-item {
-  color: color-mix(in srgb, var(--primary-text) 85%, var(--secondary-text) 15%);
+  color: #546156;
+  background: rgba(236, 240, 237, 0.92);
+  border: 1px solid transparent;
 }
 
 :root[data-theme="light"] .cate1-item.selected {
-  color: var(--primary-text);
+  color: #1f2937;
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid transparent;
 }
 
 :root[data-theme="dark"] .cate1-item.selected {

@@ -158,6 +158,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             // Apply macOS vibrancy to the main window when running on macOS
             #[cfg(target_os = "macos")]

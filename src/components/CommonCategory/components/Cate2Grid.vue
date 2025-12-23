@@ -177,7 +177,7 @@ const handleToggleInternalExpand = () => {
 
 <style scoped>
 .cate2-container {
-  padding: 10px 24px 6px;
+  padding: 10px 12px 6px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -249,11 +249,15 @@ const handleToggleInternalExpand = () => {
 }
 
 :root[data-theme="light"] .cate2-card {
-  color: color-mix(in srgb, var(--primary-text) 85%, var(--secondary-text) 15%);
+  color: #546156;
+  background: rgba(236, 240, 237, 0.92);
+  border: 1px solid transparent;
 }
 
 :root[data-theme="light"] .cate2-card.active {
-  color: var(--primary-text);
+  color: #1f2937;
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid transparent;
 }
 
 :root[data-theme="dark"] .cate2-card.active {

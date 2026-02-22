@@ -515,6 +515,11 @@ async function mountXgPlayer(
     player.muted = storedPlayerVolume === 0 ? true : player.muted;
   }
 
+  // Sync muted prop from multi-room store
+  if (props.muted !== undefined) {
+    player.muted = props.muted;
+  }
+
   const lineOptionsForPlatform = lineOptions.value.map((option) => ({ ...option }));
 
   refreshControlPlugin.value = player.registerPlugin(RefreshControl, {
@@ -1047,6 +1052,27 @@ watch(
   [showCompactIsland, playerAnchorName, playerTitle, playerAvatar],
   () => {
     broadcastIslandState();
+  },
+  { immediate: true },
+);
+
+// Sync muted prop from multi-room store to player instance
+watch(
+  () => props.muted,
+  (muted) => {
+    if (muted !== undefined && playerInstance.value) {
+      playerInstance.value.muted = muted;
+    }
+  },
+);
+
+// Auto-collapse danmu panel in compact/multi-room mode
+watch(
+  () => props.compactMode,
+  (compact) => {
+    if (compact && !isDanmuCollapsed.value) {
+      isDanmuCollapsed.value = true;
+    }
   },
   { immediate: true },
 );

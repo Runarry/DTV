@@ -73,6 +73,8 @@ import { useHuyaLiveRooms } from './composables/useHuyaLiveRooms.ts'
 import { useDouyinLiveRooms } from './composables/useDouyinLiveRooms.ts'
 import { useBilibiliLiveRooms } from './composables/useBilibiliLiveRooms.ts'
 import { useDouyuLiveRooms } from './composables/useDouyuLiveRooms.ts'
+import { useMultiRoomStore } from '../../stores/multiRoom'
+import { Platform } from '../../platforms/common/types'
 import SmoothImage from '../Common/SmoothImage.vue'
 import LoadingDots from '../Common/LoadingDots.vue'
 
@@ -92,6 +94,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const multiRoomStore = useMultiRoomStore();
 const scrollComponentRef = ref<any | null>(null);
 const containerWidth = ref(0);
 const categoryHref = computed(() => props.selectedCategory?.cate2Href || null);
@@ -276,8 +279,20 @@ watch([rooms, isLoading, isLoadingMore], () => {
   if (!isLoading.value && !isLoadingMore.value) scheduleEnsureContentFill();
 });
 
+const platformEnumMap: Record<string, Platform> = {
+  douyu: Platform.DOUYU,
+  douyin: Platform.DOUYIN,
+  huya: Platform.HUYA,
+  bilibili: Platform.BILIBILI,
+};
+
 const goToPlayer = (roomId: string) => {
-  if (roomId && props.playerRouteName) {
+  if (!roomId) return;
+  const platform = platformEnumMap[platformName.value];
+  if (platform) {
+    multiRoomStore.openRoom(platform, roomId);
+    router.push({ name: 'multiPlayer' });
+  } else if (props.playerRouteName) {
     router.push({ name: props.playerRouteName, params: { roomId } });
   }
 };

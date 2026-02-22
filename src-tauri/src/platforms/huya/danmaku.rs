@@ -113,7 +113,7 @@ pub async fn start_huya_danmaku_listener(
     // 停止已有监听
     let previous_tx = {
         let mut lock = state.inner().0.lock().unwrap();
-        lock.take()
+        lock.remove(&room_id_or_url)
     };
     if let Some(tx) = previous_tx {
         if tx.send(()).await.is_err() {
@@ -125,7 +125,7 @@ pub async fn start_huya_danmaku_listener(
     let (tx_shutdown, mut rx_shutdown) = tokio_mpsc::channel::<()>(1);
     {
         let mut lock = state.inner().0.lock().unwrap();
-        *lock = Some(tx_shutdown);
+        lock.insert(room_id_or_url.clone(), tx_shutdown);
     }
 
     let app_handle_clone = app_handle.clone();
@@ -292,7 +292,7 @@ pub async fn stop_huya_danmaku_listener(
     // 取出当前监听的停止信号发送器
     let tx = {
         let mut lock = state.inner().0.lock().unwrap();
-        lock.take()
+        lock.remove(&room_id)
     };
 
     if let Some(tx) = tx {

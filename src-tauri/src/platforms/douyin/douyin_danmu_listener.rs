@@ -19,31 +19,25 @@ pub async fn start_douyin_danmu_listener(
         room_id_or_url
     );
 
+    let normalized_room_id = normalize_douyin_live_id(&room_id_or_url);
+
+    // Stop previous listener for this specific room if exists
     let previous_tx = {
         let mut lock = state.inner().0.lock().unwrap();
-        lock.take()
+        lock.remove(&normalized_room_id)
     };
 
     if let Some(tx) = previous_tx {
-        println!("[Douyin Danmaku] Sending shutdown to previous Douyin listener task.");
+        println!("[Douyin Danmaku] Sending shutdown to previous Douyin listener task for room {}.", normalized_room_id);
         if tx.send(()).await.is_err() {
             eprintln!("[Douyin Danmaku] Failed to send shutdown. Task might have already completed or panicked.");
         }
     }
 
-    if room_id_or_url == "stop_listening" {
-        println!(
-            "[Douyin Danmaku] Received stop_listening signal. Listener will not be restarted."
-        );
-        return Ok(());
-    }
-
-    let normalized_room_id = normalize_douyin_live_id(&room_id_or_url);
-
     let (tx_shutdown, mut rx_shutdown) = tokio_mpsc::channel::<()>(1);
     {
         let mut lock = state.inner().0.lock().unwrap();
-        *lock = Some(tx_shutdown);
+        lock.insert(normalized_room_id.clone(), tx_shutdown);
     }
 
     let app_handle_clone = app_handle.clone();
@@ -136,6 +130,32 @@ pub async fn start_douyin_danmu_listener(
             backoff_secs = (backoff_secs * 2).min(30);
         }
     });
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_douyin_danmu_listener(
+    room_id: String,
+    state: tauri::State<'_, crate::platforms::common::DouyinDanmakuState>,
+) -> Result<(), String> {
+    println!(
+        "[Douyin Danmaku] stop_douyin_danmu_listener called for room_id={}",
+        room_id
+    );
+
+    let tx = {
+        let mut lock = state.inner().0.lock().unwrap();
+        lock.remove(&room_id)
+    };
+
+    if let Some(tx) = tx {
+        if tx.send(()).await.is_err() {
+            eprintln!("[Douyin Danmaku] 停止信号发送失败");
+        }
+    } else {
+        println!("[Douyin Danmaku] 没有找到活跃的监听器需要停止");
+    }
+
     Ok(())
 }
 

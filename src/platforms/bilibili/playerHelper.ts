@@ -178,11 +178,11 @@ export async function startBilibiliDanmakuListener(
   return unlisten;
 }
 
-export async function stopBilibiliDanmaku(currentUnlistenFn: (() => void) | null): Promise<void> {
+export async function stopBilibiliDanmaku(roomId: string, currentUnlistenFn: (() => void) | null): Promise<void> {
   if (currentUnlistenFn) {
     try { currentUnlistenFn(); } catch {}
   }
   try {
-    await invoke('stop_bilibili_danmaku_listener');
+    await invoke('stop_bilibili_danmaku_listener', { roomId: roomId || '' });
   } catch {}
 }

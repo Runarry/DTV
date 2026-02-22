@@ -15,10 +15,10 @@ pub async fn start_bilibili_danmaku_listener(
 ) -> Result<(), String> {
     let room_id = payload.args.room_id_str.clone();
 
-    // stop previous listener if exists
+    // stop previous listener for this specific room if exists
     let previous_tx = {
         let mut lock = state.inner().0.lock().unwrap();
-        lock.take()
+        lock.remove(&room_id)
     };
     if let Some(tx) = previous_tx {
         if tx.send(()).await.is_err() {
@@ -29,7 +29,7 @@ pub async fn start_bilibili_danmaku_listener(
     let (tx_shutdown, mut rx_shutdown) = tokio_mpsc::channel::<()>(1);
     {
         let mut lock = state.inner().0.lock().unwrap();
-        *lock = Some(tx_shutdown);
+        lock.insert(room_id.clone(), tx_shutdown);
     }
 
     let app_handle_clone = app_handle.clone();
@@ -99,11 +99,12 @@ pub async fn start_bilibili_danmaku_listener(
 
 #[tauri::command]
 pub async fn stop_bilibili_danmaku_listener(
+    room_id: String,
     state: tauri::State<'_, crate::platforms::common::BilibiliDanmakuState>,
 ) -> Result<(), String> {
     let previous_tx = {
         let mut lock = state.inner().0.lock().unwrap();
-        lock.take()
+        lock.remove(&room_id)
     };
     if let Some(tx) = previous_tx {
         match tx.send(()).await {

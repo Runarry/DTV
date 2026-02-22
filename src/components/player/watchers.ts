@@ -17,6 +17,8 @@ export interface PlayerProps {
   isLive?: boolean | null;
   initialError?: string | null;
   cookie?: string | null;
+  muted?: boolean;
+  compactMode?: boolean;
 }
 
 export interface PlayerWatcherContext {

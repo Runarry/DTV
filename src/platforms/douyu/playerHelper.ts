@@ -70,8 +70,8 @@ export async function getDouyuStreamConfig(
   }
 
   try {
-    await invoke('set_stream_url_cmd', { url: finalStreamUrl });
-    const proxyUrl = await invoke<string>('start_proxy');
+    await invoke<string>('start_proxy');
+    const proxyUrl = `http://127.0.0.1:34719/live.flv?url=${encodeURIComponent(finalStreamUrl)}`;
     douyuProxyActive = true;
     return { streamUrl: proxyUrl, streamType };
   } catch (e: any) {

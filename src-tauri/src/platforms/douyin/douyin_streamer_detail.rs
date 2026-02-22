@@ -7,7 +7,6 @@ use crate::platforms::douyin::web_api::{
     DEFAULT_USER_AGENT,
 };
 use crate::proxy::ProxyServerHandle;
-use crate::StreamUrlStore;
 use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue, REFERER, USER_AGENT};
 use serde_json::Value;
@@ -19,13 +18,11 @@ const QUALITY_UHD: &str = "UHD";
 #[command]
 pub async fn get_douyin_live_stream_url(
     app_handle: AppHandle,
-    stream_url_store: State<'_, StreamUrlStore>,
     proxy_server_handle: State<'_, ProxyServerHandle>,
     payload: GetStreamUrlPayload,
 ) -> Result<CommonLiveStreamInfo, String> {
     get_douyin_live_stream_url_with_quality(
         app_handle,
-        stream_url_store,
         proxy_server_handle,
         payload,
         QUALITY_OD.to_string(),
@@ -36,7 +33,6 @@ pub async fn get_douyin_live_stream_url(
 #[command]
 pub async fn get_douyin_live_stream_url_with_quality(
     _app_handle: AppHandle,
-    _stream_url_store: State<'_, StreamUrlStore>,
     _proxy_server_handle: State<'_, ProxyServerHandle>,
     payload: GetStreamUrlPayload,
     quality: String,

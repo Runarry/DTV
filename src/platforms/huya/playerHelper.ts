@@ -125,7 +125,7 @@ export async function startHuyaDanmakuListener(
   return unlisten;
 }
 
-export async function stopHuyaDanmaku(currentUnlistenFn: (() => void) | null): Promise<void> {
+export async function stopHuyaDanmaku(roomId: string, currentUnlistenFn: (() => void) | null): Promise<void> {
   if (currentUnlistenFn) {
     try { 
       currentUnlistenFn(); 
@@ -137,7 +137,7 @@ export async function stopHuyaDanmaku(currentUnlistenFn: (() => void) | null): P
   
   // 停止后端虎牙弹幕监听
   try {
-    const roomIdToStop = currentHuyaRoomId || '';
+    const roomIdToStop = roomId || currentHuyaRoomId || '';
     await invoke('stop_huya_danmaku_listener', { roomId: roomIdToStop });
   } catch (e) {
     console.warn('[HuyaPlayerHelper] stopHuyaDanmaku: backend stop encountered error (ignored):', e);

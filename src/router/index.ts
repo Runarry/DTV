@@ -8,6 +8,16 @@ import HuyaPlayerView from '../pages/HuyaPlayerView.vue'
 import BilibiliHomeView from '../pages/BilibiliHomeView.vue'
 import BilibiliPlayerView from '../pages/BilibiliPlayerView.vue'
 import CustomHomeView from '../pages/CustomHomeView.vue'
+import MultiRoomView from '../pages/MultiRoomView.vue'
+import { Platform } from '../platforms/common/types'
+import { useMultiRoomStore } from '../stores/multiRoom'
+
+const platformMap: Record<string, Platform> = {
+  douyuPlayer: Platform.DOUYU,
+  douyinPlayer: Platform.DOUYIN,
+  huyaPlayer: Platform.HUYA,
+  bilibiliPlayer: Platform.BILIBILI,
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,29 +48,66 @@ const router = createRouter({
       component: CustomHomeView
     },
     {
-      path: '/player/douyu/:roomId', 
+      path: '/player/douyu/:roomId',
       name: 'douyuPlayer',
       component: DouyuPlayerView,
-      props: true
+      props: true,
+      beforeEnter: (to) => {
+        const store = useMultiRoomStore()
+        const platform = platformMap[to.name as string]
+        if (platform) {
+          store.openRoom(platform, to.params.roomId as string)
+          return { name: 'multiPlayer' }
+        }
+      },
     },
     {
       path: '/player/douyin/:roomId',
       name: 'douyinPlayer',
       component: DouyinPlayerView,
-      props: true
+      props: true,
+      beforeEnter: (to) => {
+        const store = useMultiRoomStore()
+        const platform = platformMap[to.name as string]
+        if (platform) {
+          store.openRoom(platform, to.params.roomId as string)
+          return { name: 'multiPlayer' }
+        }
+      },
     },
     {
       path: '/player/huya/:roomId',
       name: 'huyaPlayer',
       component: HuyaPlayerView,
-      props: true
+      props: true,
+      beforeEnter: (to) => {
+        const store = useMultiRoomStore()
+        const platform = platformMap[to.name as string]
+        if (platform) {
+          store.openRoom(platform, to.params.roomId as string)
+          return { name: 'multiPlayer' }
+        }
+      },
     },
     {
       path: '/player/bilibili/:roomId',
       name: 'bilibiliPlayer',
       component: BilibiliPlayerView,
-      props: true
-    }
+      props: true,
+      beforeEnter: (to) => {
+        const store = useMultiRoomStore()
+        const platform = platformMap[to.name as string]
+        if (platform) {
+          store.openRoom(platform, to.params.roomId as string)
+          return { name: 'multiPlayer' }
+        }
+      },
+    },
+    {
+      path: '/multi-player',
+      name: 'multiPlayer',
+      component: MultiRoomView,
+    },
   ]
 })
 

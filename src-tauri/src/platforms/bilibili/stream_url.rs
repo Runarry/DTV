@@ -3,13 +3,11 @@ use serde_json::Value;
 use tauri::{command, AppHandle, State};
 
 use crate::platforms::common::types::StreamVariant;
-use crate::proxy::{start_proxy, ProxyServerHandle};
-use crate::StreamUrlStore;
+use crate::proxy::ProxyServerHandle;
 
 #[command]
 pub async fn get_bilibili_live_stream_url_with_quality(
     app_handle: AppHandle,
-    stream_url_store: State<'_, StreamUrlStore>,
     proxy_server_handle: State<'_, ProxyServerHandle>,
     payload: crate::platforms::common::GetStreamUrlPayload,
     quality: String,
@@ -488,14 +486,12 @@ pub async fn get_bilibili_live_stream_url_with_quality(
 
     match selected_stream {
         SelectedStream::Flv(real_url) => {
-            // FLV：写入到 Store 并启动代理
+            // FLV: start proxy and construct URL with query parameter
             let proxied_url = {
-                {
-                    let mut current_url_in_store = stream_url_store.url.lock().unwrap();
-                    *current_url_in_store = real_url.clone();
-                }
-                match start_proxy(app_handle, proxy_server_handle, stream_url_store).await {
-                    Ok(proxy) => Some(proxy),
+                match crate::proxy::start_proxy(app_handle, proxy_server_handle).await {
+                    Ok(base_url) => {
+                        Some(format!("{}/live.flv?url={}", base_url, urlencoding::encode(&real_url)))
+                    }
                     Err(e) => {
                         eprintln!("[Bilibili] Failed to start proxy: {}", e);
                         None
@@ -523,17 +519,13 @@ pub async fn get_bilibili_live_stream_url_with_quality(
             })
         }
         SelectedStream::Hls(real_url) => {
-            // HLS：无需本地代理，若存在旧的 FLV 代理则关闭并清空存储
+            // HLS: no local proxy needed, stop existing FLV proxy if any
             {
                 let handle_to_stop = { proxy_server_handle.0.lock().unwrap().take() };
                 if let Some(handle) = handle_to_stop {
                     handle.stop(false).await;
                     eprintln!("[Bilibili] Stopped existing FLV proxy before using HLS stream");
                 }
-            }
-            {
-                let mut current_url_in_store = stream_url_store.url.lock().unwrap();
-                *current_url_in_store = String::new();
             }
 
             Ok(crate::platforms::common::LiveStreamInfo {

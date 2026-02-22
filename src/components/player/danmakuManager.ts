@@ -138,11 +138,11 @@ export const stopCurrentDanmakuListener = async (
     if (platform === StreamingPlatform.DOUYU) {
       await stopDouyuDanmaku(roomId!, ctx.unlistenDanmakuFn.value);
     } else if (platform === StreamingPlatform.DOUYIN) {
-      await stopDouyinDanmaku(ctx.unlistenDanmakuFn.value);
+      await stopDouyinDanmaku(roomId || '', ctx.unlistenDanmakuFn.value);
     } else if (platform === StreamingPlatform.HUYA) {
-      await stopHuyaDanmaku(ctx.unlistenDanmakuFn.value);
+      await stopHuyaDanmaku(roomId || '', ctx.unlistenDanmakuFn.value);
     } else if (platform === StreamingPlatform.BILIBILI) {
-      await stopBilibiliDanmaku(ctx.unlistenDanmakuFn.value);
+      await stopBilibiliDanmaku(roomId || '', ctx.unlistenDanmakuFn.value);
     }
     if (ctx.unlistenDanmakuFn.value) {
       ctx.unlistenDanmakuFn.value = null;

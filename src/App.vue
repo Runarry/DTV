@@ -46,6 +46,7 @@ import Sidebar from './layout/Sidebar.vue';
 import type { Platform as UiPlatform } from './layout/types';
 import { useThemeStore } from './stores/theme';
 import { useFollowStore } from './store/followStore';
+import { useMultiRoomStore } from './stores/multiRoom';
 import { Platform } from './platforms/common/types';
 import type { FollowedStreamer } from './platforms/common/types';
 import './styles/global.css';
@@ -53,6 +54,7 @@ import './styles/global.css';
 const router = useRouter();
 const route = useRoute();
 const followStore = useFollowStore();
+const multiRoomStore = useMultiRoomStore();
 
 const isSidebarCollapsed = ref(false);
 const isPlayerFullscreen = ref(false);
@@ -80,7 +82,8 @@ const isPlayerRoute = computed(() => {
     name === 'douyuPlayer' ||
     name === 'douyinPlayer' ||
     name === 'huyaPlayer' ||
-    name === 'bilibiliPlayer'
+    name === 'bilibiliPlayer' ||
+    name === 'multiPlayer'
   );
 });
 
@@ -111,15 +114,11 @@ const handlePlatformChange = (platform: UiPlatform | 'all') => {
 };
 
 const handleSelectAnchor = (streamer: FollowedStreamer) => {
-  if (streamer.platform === Platform.DOUYIN) {
-    router.push({ name: 'douyinPlayer', params: { roomId: streamer.id } });
-  } else if (streamer.platform === Platform.HUYA) {
-    router.push({ name: 'huyaPlayer', params: { roomId: streamer.id } });
-  } else if (streamer.platform === Platform.BILIBILI) {
-    router.push({ name: 'bilibiliPlayer', params: { roomId: streamer.id } });
-  } else {
-    router.push({ name: 'douyuPlayer', params: { roomId: streamer.id } });
-  }
+  multiRoomStore.openRoom(streamer.platform, streamer.id, {
+    anchorName: streamer.nickname,
+    avatar: streamer.avatarUrl,
+  });
+  router.push({ name: 'multiPlayer' });
 };
 
 const handleSelectAnchorFromSearch = (payload: { id: string; platform: Platform; nickname?: string; avatarUrl?: string | null }) => {

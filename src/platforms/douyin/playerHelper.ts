@@ -128,6 +128,10 @@ export async function startDouyinDanmakuListener(
   const unlisten = await listen<DouyinRustDanmakuPayload>(eventName, (event: TauriEvent<DouyinRustDanmakuPayload>) => {
     if (event.payload) {
       const rustP = event.payload;
+
+      // 仅处理当前 roomId 的消息，避免跨房间干扰
+      if (rustP.room_id && rustP.room_id !== roomId) return;
+
       const frontendDanmaku: DanmakuMessage = {
         id: uuidv4(),
         nickname: rustP.user || '未知用户',
@@ -170,16 +174,14 @@ export async function startDouyinDanmakuListener(
   return unlisten;
 }
 
-export async function stopDouyinDanmaku(currentUnlistenFn: (() => void) | null): Promise<void> {
+export async function stopDouyinDanmaku(roomId: string, currentUnlistenFn: (() => void) | null): Promise<void> {
   if (currentUnlistenFn) {
     currentUnlistenFn();
   }
   try {
-    const rustPayload: RustGetStreamUrlPayload = { 
-      args: { room_id_str: "stop_listening" }, 
-      platform: Platform.DOUYIN, 
-    };
-    await invoke('start_douyin_danmu_listener', { payload: rustPayload });
+    if (roomId) {
+      await invoke('stop_douyin_danmu_listener', { roomId });
+    }
   } catch (error) {
     console.error('[DouyinPlayerHelper] Error stopping Douyin danmaku listener:', error);
   }

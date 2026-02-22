@@ -1,8 +1,6 @@
-use actix_web::{dev::ServerHandle, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{dev::ServerHandle, web, App, HttpResponse, HttpServer, Responder};
 use futures_util::TryStreamExt;
 use reqwest::Client;
-// awc removed for now due to API differences; using reqwest streaming
-use crate::StreamUrlStore;
 use serde::Deserialize;
 use std::io::ErrorKind;
 use std::net::TcpStream;
@@ -111,15 +109,19 @@ async fn image_proxy_handler(
     }
 }
 
+#[derive(Deserialize)]
+struct FlvQuery {
+    url: String,
+}
+
 // Your actual proxy logic - this is a simplified placeholder
 async fn flv_proxy_handler(
-    _req: HttpRequest,
-    stream_url_store: web::Data<StreamUrlStore>,
+    query: web::Query<FlvQuery>,
     client: web::Data<Client>,
 ) -> impl Responder {
-    let url = stream_url_store.url.lock().unwrap().clone();
+    let url = query.url.clone();
     if url.is_empty() {
-        return HttpResponse::NotFound().body("Stream URL is not set or empty.");
+        return HttpResponse::BadRequest().body("Missing url query parameter");
     }
 
     println!(
@@ -208,18 +210,8 @@ async fn flv_proxy_handler(
 pub async fn start_proxy(
     _app_handle: AppHandle,
     server_handle_state: State<'_, ProxyServerHandle>,
-    stream_url_store: State<'_, StreamUrlStore>,
 ) -> Result<String, String> {
     let port = find_free_port().await;
-    let current_stream_url = stream_url_store.url.lock().unwrap().clone();
-
-    if current_stream_url.is_empty() {
-        return Err("Stream URL is not set in store. Cannot start proxy.".to_string());
-    }
-
-    // stream_url_data_for_actix can be created once and cloned, as StreamUrlStore is Arc based and Send + Sync
-    let stream_url_data_for_actix = web::Data::new(stream_url_store.inner().clone());
-    // REMOVED: let awc_client_for_actix = web::Data::new(Client::default());
 
     // Ensure MutexGuard is dropped before .await
     let existing_handle_to_stop = { server_handle_state.0.lock().unwrap().take() };
@@ -228,8 +220,7 @@ pub async fn start_proxy(
     }
 
     let server = match HttpServer::new(move || {
-        let app_data_stream_url = stream_url_data_for_actix.clone();
-        // Create reqwest::Client inside the closure for each worker thread (for images)
+        // Create reqwest::Client inside the closure for each worker thread
         let app_data_reqwest_client = web::Data::new(
             Client::builder()
                 .no_proxy()
@@ -245,7 +236,6 @@ pub async fn start_proxy(
                 .expect("failed to build client"),
         );
         App::new()
-            .app_data(app_data_stream_url)
             .app_data(app_data_reqwest_client)
             .wrap(actix_cors::Cors::permissive())
             .route("/live.flv", web::get().to(flv_proxy_handler))
@@ -278,14 +268,13 @@ pub async fn start_proxy(
         }
     });
 
-    let proxy_url = format!("http://127.0.0.1:{}/live.flv", port);
-    Ok(proxy_url)
+    let base_url = format!("http://127.0.0.1:{}", port);
+    Ok(base_url)
 }
 
 #[tauri::command]
 pub async fn start_static_proxy_server(
     _app_handle: AppHandle,
-    stream_url_store: State<'_, StreamUrlStore>,
 ) -> Result<String, String> {
     // Use a dedicated port for static image proxy to avoid interfering with FLV stream proxy
     let port: u16 = 34721;
@@ -295,10 +284,7 @@ pub async fn start_static_proxy_server(
         return Ok(format!("http://127.0.0.1:{}", port));
     }
 
-    let stream_url_data_for_actix = web::Data::new(stream_url_store.inner().clone());
-
     let server = match HttpServer::new(move || {
-        let app_data_stream_url = stream_url_data_for_actix.clone();
         let app_data_reqwest_client = web::Data::new(
             Client::builder()
                 .no_proxy()
@@ -314,7 +300,6 @@ pub async fn start_static_proxy_server(
                 .expect("failed to build client"),
         );
         App::new()
-            .app_data(app_data_stream_url)
             .app_data(app_data_reqwest_client)
             .wrap(actix_cors::Cors::permissive())
             .route("/live.flv", web::get().to(flv_proxy_handler))

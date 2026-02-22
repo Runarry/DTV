@@ -4,7 +4,6 @@
 use reqwest;
 use std::panic;
 use std::collections::HashMap;
-use std::env;
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
 use tauri::Manager;
@@ -16,6 +15,7 @@ use platforms::douyin::fetch_douyin_partition_rooms;
 use platforms::douyin::fetch_douyin_room_info;
 use platforms::douyin::fetch_douyin_streamer_info;
 use platforms::douyin::start_douyin_danmu_listener;
+use platforms::douyin::stop_douyin_danmu_listener;
 use platforms::douyin::{get_douyin_live_stream_url, get_douyin_live_stream_url_with_quality};
 use platforms::douyu::fetch_categories;
 use platforms::douyu::fetch_douyu_room_info;
@@ -24,11 +24,6 @@ use platforms::douyu::{fetch_live_list, fetch_live_list_for_cate3};
 use platforms::huya::stop_huya_danmaku_listener;
 use platforms::huya::{fetch_huya_live_list, start_huya_danmaku_listener};
 // use platforms::huya::get_huya_stream_url_with_quality; // removed in favor of unified cmd
-
-#[derive(Default, Clone)]
-pub struct StreamUrlStore {
-    pub url: Arc<Mutex<String>>,
-}
 
 // State for managing Douyu danmaku listener handles (stop signals)
 #[derive(Default, Clone)]
@@ -69,17 +64,6 @@ async fn get_stream_url_with_quality_cmd(
 }
 
 // Legacy Huya stream URL command removed in favor of unified command
-
-// This is the command that should be used for setting stream URL if it interacts with StreamUrlStore
-#[tauri::command]
-async fn set_stream_url_cmd(
-    url: String,
-    state: tauri::State<'_, StreamUrlStore>,
-) -> Result<(), String> {
-    let mut current_url = state.url.lock().unwrap();
-    *current_url = url;
-    Ok(())
-}
 
 // Command to start Douyu danmaku listener
 #[tauri::command]
@@ -185,17 +169,16 @@ fn main() {
             .manage(DouyinDanmakuState::default()) // Manage DouyinDanmakuState
             .manage(HuyaDanmakuState::default()) // Manage HuyaDanmakuState
             .manage(platforms::common::BilibiliDanmakuState::default()) // Manage BilibiliDanmakuState
-            .manage(StreamUrlStore::default())
             .manage(proxy::ProxyServerHandle::default())
             .manage(platforms::bilibili::state::BilibiliState::default())
             .invoke_handler(tauri::generate_handler![
                 get_stream_url_cmd,
                 get_stream_url_with_quality_cmd,
-                set_stream_url_cmd,
                 search_anchor,
                 start_danmaku_listener,      // Douyu danmaku start
                 stop_danmaku_listener,       // Douyu danmaku stop
                 start_douyin_danmu_listener, // Added Douyin danmaku listener command
+                stop_douyin_danmu_listener,  // Added Douyin danmaku stop command
                 start_huya_danmaku_listener, // Added Huya danmaku listener command
                 stop_huya_danmaku_listener,  // Added Huya danmaku stop command
                 platforms::bilibili::danmaku::start_bilibili_danmaku_listener,

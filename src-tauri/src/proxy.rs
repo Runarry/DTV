@@ -2,6 +2,8 @@ use actix_web::{dev::ServerHandle, web, App, HttpResponse, HttpServer, Responder
 use futures_util::TryStreamExt;
 use reqwest::Client;
 use serde::Deserialize;
+use serde::Serialize;
+use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::net::TcpStream;
 use std::sync::Mutex as StdMutex;
@@ -12,9 +14,58 @@ use tauri::{AppHandle, State};
 #[derive(Default)]
 pub struct ProxyServerHandle(pub StdMutex<Option<ServerHandle>>);
 
+struct FlvProxySession {
+    handle: ServerHandle,
+    port: u16,
+    upstream_url: String,
+    platform: String,
+    room_id: Option<String>,
+}
+
+#[derive(Default)]
+pub struct FlvProxySessionManager(pub StdMutex<HashMap<String, FlvProxySession>>);
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartFlvProxySessionPayload {
+    upstream_url: String,
+    platform: String,
+    room_id: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartFlvProxySessionResponse {
+    session_id: String,
+    proxy_url: String,
+}
+
 async fn find_free_port() -> u16 {
     // Using a fixed port as requested by the user for easier debugging
     34719
+}
+
+fn build_proxy_http_client() -> Client {
+    Client::builder()
+        .no_proxy()
+        .http1_only()
+        .gzip(false)
+        .brotli(false)
+        .no_deflate()
+        .pool_idle_timeout(None)
+        .pool_max_idle_per_host(4)
+        .tcp_keepalive(Duration::from_secs(60))
+        .timeout(Duration::from_secs(7200))
+        .build()
+        .expect("failed to build client")
+}
+
+fn generate_session_id() -> String {
+    use rand::RngCore;
+
+    let mut bytes = [0u8; 16];
+    rand::thread_rng().fill_bytes(&mut bytes);
+    hex::encode(bytes)
 }
 
 #[derive(Deserialize)]
@@ -114,23 +165,15 @@ struct FlvQuery {
     url: String,
 }
 
-// Your actual proxy logic - this is a simplified placeholder
-async fn flv_proxy_handler(
-    query: web::Query<FlvQuery>,
-    client: web::Data<Client>,
-) -> impl Responder {
-    let url = query.url.clone();
+async fn proxy_flv_stream(client: &Client, url: String) -> HttpResponse {
     if url.is_empty() {
-        return HttpResponse::BadRequest().body("Missing url query parameter");
+        return HttpResponse::BadRequest().body("Missing upstream url");
     }
 
-    println!(
-        "[Rust/proxy.rs handler] Incoming FLV proxy request -> {}",
-        url
-    );
+    println!("[Rust/proxy.rs handler] Incoming FLV proxy request -> {}", url);
 
     let mut req = client
-        .get(&url)
+        .get(&url.clone())
         .header(
             "User-Agent",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -198,12 +241,149 @@ async fn flv_proxy_handler(
                 "[Rust/proxy.rs handler] Failed to send request to upstream {} with reqwest: {}",
                 url, e
             );
-            HttpResponse::InternalServerError().body(format!(
+            return HttpResponse::InternalServerError().body(format!(
                 "Error connecting to upstream FLV stream {} with reqwest: {}",
                 url, e
-            ))
+            ));
         }
     }
+}
+
+// Legacy query-based FLV proxy
+async fn flv_proxy_handler(
+    query: web::Query<FlvQuery>,
+    client: web::Data<Client>,
+) -> impl Responder {
+    proxy_flv_stream(client.get_ref(), query.url.clone()).await
+}
+
+// Session-based FLV proxy with fixed upstream URL
+async fn flv_proxy_session_handler(
+    upstream_url: web::Data<String>,
+    client: web::Data<Client>,
+) -> impl Responder {
+    proxy_flv_stream(client.get_ref(), upstream_url.get_ref().clone()).await
+}
+
+#[tauri::command]
+pub async fn start_flv_proxy_session(
+    _app_handle: AppHandle,
+    session_manager: State<'_, FlvProxySessionManager>,
+    payload: StartFlvProxySessionPayload,
+) -> Result<StartFlvProxySessionResponse, String> {
+    let upstream_url = payload.upstream_url.trim().to_string();
+    if upstream_url.is_empty() {
+        return Err("upstream_url is required".to_string());
+    }
+
+    let session_id = generate_session_id();
+    let runtime_session_id = session_id.clone();
+    let runtime_platform = payload.platform.clone();
+    let runtime_room_id = payload.room_id.clone();
+    let app_data_upstream_url = web::Data::new(upstream_url.clone());
+
+    let server_builder = HttpServer::new(move || {
+        let app_data_reqwest_client = web::Data::new(build_proxy_http_client());
+        App::new()
+            .app_data(app_data_reqwest_client)
+            .app_data(app_data_upstream_url.clone())
+            .wrap(actix_cors::Cors::permissive())
+            .route("/live.flv", web::get().to(flv_proxy_session_handler))
+    })
+    .keep_alive(Duration::from_secs(120))
+    .bind(("127.0.0.1", 0))
+    .map_err(|e| format!("[Rust/proxy.rs] Failed to bind FLV session proxy: {}", e))?;
+
+    let port = server_builder
+        .addrs()
+        .first()
+        .map(|addr| addr.port())
+        .ok_or_else(|| "[Rust/proxy.rs] Failed to resolve bound address for FLV session".to_string())?;
+    let runtime_port = port;
+
+    let server = server_builder.run();
+    let handle = server.handle();
+
+    {
+        let mut guard = session_manager.0.lock().unwrap();
+        guard.insert(
+            session_id.clone(),
+            FlvProxySession {
+                handle,
+                port,
+                upstream_url: upstream_url.clone(),
+                platform: payload.platform.clone(),
+                room_id: payload.room_id.clone(),
+            },
+        );
+    }
+
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = server.await {
+            eprintln!(
+                "[Rust/proxy.rs] FLV session {} (platform={}, room={:?}, port={}) run error: {}",
+                runtime_session_id,
+                runtime_platform,
+                runtime_room_id,
+                runtime_port,
+                e
+            );
+        } else {
+            println!(
+                "[Rust/proxy.rs] FLV session {} (platform={}, room={:?}) on port {} shut down.",
+                runtime_session_id, runtime_platform, runtime_room_id, runtime_port
+            );
+        }
+    });
+
+    Ok(StartFlvProxySessionResponse {
+        session_id,
+        proxy_url: format!("http://127.0.0.1:{}/live.flv", port),
+    })
+}
+
+#[tauri::command]
+pub async fn stop_flv_proxy_session(
+    session_manager: State<'_, FlvProxySessionManager>,
+    session_id: String,
+) -> Result<(), String> {
+    let session = {
+        let mut guard = session_manager.0.lock().unwrap();
+        guard.remove(&session_id)
+    };
+
+    if let Some(session) = session {
+        println!(
+            "[Rust/proxy.rs] stop_flv_proxy_session: session={} platform={} room={:?} port={} upstream={}",
+            session_id, session.platform, session.room_id, session.port, session.upstream_url
+        );
+        session.handle.stop(false).await;
+    } else {
+        println!(
+            "[Rust/proxy.rs] stop_flv_proxy_session: session {} not found (already stopped).",
+            session_id
+        );
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_all_flv_proxy_sessions(
+    session_manager: State<'_, FlvProxySessionManager>,
+) -> Result<(), String> {
+    let sessions = {
+        let mut guard = session_manager.0.lock().unwrap();
+        guard.drain().map(|(_, session)| session).collect::<Vec<_>>()
+    };
+
+    for session in sessions {
+        println!(
+            "[Rust/proxy.rs] stop_all_flv_proxy_sessions: platform={} room={:?} port={} upstream={}",
+            session.platform, session.room_id, session.port, session.upstream_url
+        );
+        session.handle.stop(false).await;
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -221,20 +401,7 @@ pub async fn start_proxy(
 
     let server = match HttpServer::new(move || {
         // Create reqwest::Client inside the closure for each worker thread
-        let app_data_reqwest_client = web::Data::new(
-            Client::builder()
-                .no_proxy()
-                .http1_only()
-                .gzip(false)
-                .brotli(false)
-                .no_deflate()
-                .pool_idle_timeout(None)
-                .pool_max_idle_per_host(4)
-                .tcp_keepalive(Duration::from_secs(60))
-                .timeout(Duration::from_secs(7200))
-                .build()
-                .expect("failed to build client"),
-        );
+        let app_data_reqwest_client = web::Data::new(build_proxy_http_client());
         App::new()
             .app_data(app_data_reqwest_client)
             .wrap(actix_cors::Cors::permissive())
@@ -285,20 +452,7 @@ pub async fn start_static_proxy_server(
     }
 
     let server = match HttpServer::new(move || {
-        let app_data_reqwest_client = web::Data::new(
-            Client::builder()
-                .no_proxy()
-                .http1_only()
-                .gzip(false)
-                .brotli(false)
-                .no_deflate()
-                .pool_idle_timeout(None)
-                .pool_max_idle_per_host(4)
-                .tcp_keepalive(Duration::from_secs(60))
-                .timeout(Duration::from_secs(7200))
-                .build()
-                .expect("failed to build client"),
-        );
+        let app_data_reqwest_client = web::Data::new(build_proxy_http_client());
         App::new()
             .app_data(app_data_reqwest_client)
             .wrap(actix_cors::Cors::permissive())

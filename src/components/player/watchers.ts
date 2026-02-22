@@ -19,6 +19,7 @@ export interface PlayerProps {
   cookie?: string | null;
   muted?: boolean;
   compactMode?: boolean;
+  shouldPlay?: boolean;
 }
 
 export interface PlayerWatcherContext {
@@ -63,7 +64,7 @@ export interface PlayerWatcherContext {
     oldPlatformForCleanup?: StreamingPlatform | null,
   ) => Promise<void>;
   stopCurrentDanmakuListener: (platform?: StreamingPlatform, roomId?: string | null | undefined) => Promise<void>;
-  stopDouyuProxy: () => Promise<void>;
+  stopCurrentFlvProxySession: () => Promise<void>;
   destroyPlayerInstance: () => void;
   isLoadingStream: Ref<boolean>;
   danmakuMessages: Ref<DanmakuMessage[]>;
@@ -102,7 +103,7 @@ export const registerPlayerWatchers = (ctx: PlayerWatcherContext) => {
     initializeQualityPreference,
     initializePlayerAndStream,
     stopCurrentDanmakuListener,
-    stopDouyuProxy,
+    stopCurrentFlvProxySession,
     destroyPlayerInstance,
     isLoadingStream,
     danmakuMessages,
@@ -295,12 +296,10 @@ export const registerPlayerWatchers = (ctx: PlayerWatcherContext) => {
       } else if (!newRoomId) {
         if (oldRoomId && oldPlatform !== null && oldPlatform !== undefined) {
           await stopCurrentDanmakuListener(oldPlatform, oldRoomId);
-          if (oldPlatform === StreamingPlatform.DOUYU) {
-            await stopDouyuProxy();
-          }
         } else {
           await stopCurrentDanmakuListener();
         }
+        await stopCurrentFlvProxySession();
 
         destroyPlayerInstance();
 

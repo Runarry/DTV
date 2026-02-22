@@ -170,6 +170,7 @@ fn main() {
             .manage(HuyaDanmakuState::default()) // Manage HuyaDanmakuState
             .manage(platforms::common::BilibiliDanmakuState::default()) // Manage BilibiliDanmakuState
             .manage(proxy::ProxyServerHandle::default())
+            .manage(proxy::FlvProxySessionManager::default())
             .manage(platforms::bilibili::state::BilibiliState::default())
             .invoke_handler(tauri::generate_handler![
                 get_stream_url_cmd,
@@ -185,6 +186,9 @@ fn main() {
                 platforms::bilibili::danmaku::stop_bilibili_danmaku_listener,
                 proxy::start_proxy,
                 proxy::stop_proxy,
+                proxy::start_flv_proxy_session,
+                proxy::stop_flv_proxy_session,
+                proxy::stop_all_flv_proxy_sessions,
                 proxy::start_static_proxy_server,
                 fetch_categories,
                 fetch_live_list,

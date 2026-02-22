@@ -159,10 +159,11 @@ import { startCurrentDanmakuListener as startDanmakuListener, stopCurrentDanmaku
 import { getLineLabel, getLineOptionsForPlatform, persistLinePreference, resolveCurrentLineFor, resolveStoredLine } from './lineOptions';
 
 // Platform-specific player helpers
-import { getDouyuStreamConfig, stopDouyuProxy } from '../../platforms/douyu/playerHelper';
+import { getDouyuStreamConfig } from '../../platforms/douyu/playerHelper';
 import { fetchAndPrepareDouyinStreamConfig } from '../../platforms/douyin/playerHelper';
 import { getHuyaStreamConfig } from '../../platforms/huya/playerHelper';
 import { getBilibiliStreamConfig } from '../../platforms/bilibili/playerHelper';
+import { stopFlvProxySession } from '../../platforms/common/flvProxySession';
 
 import StreamerInfo from '../StreamerInfo/index.vue';
 import DanmuList from '../DanmuList/index.vue';
@@ -338,10 +339,24 @@ const currentQuality = ref<string>(resolveStoredQuality(props.platform));
 const isQualitySwitching = ref(false);
 const isRefreshingStream = ref(false);
 const isLineSwitching = ref(false);
+const currentFlvProxySessionId = ref<string | null>(null);
 
 const currentLine = ref<string | null>(resolveStoredLine(props.platform));
 const lineOptions = computed(() => getLineOptionsForPlatform(props.platform));
 const getCurrentLineLabel = (key?: string | null) => getLineLabel(lineOptions.value, key);
+
+const stopCurrentFlvProxySession = async () => {
+  const sessionId = currentFlvProxySessionId.value;
+  if (!sessionId) {
+    return;
+  }
+  currentFlvProxySessionId.value = null;
+  try {
+    await stopFlvProxySession(sessionId);
+  } catch (error) {
+    console.warn('[Player] Failed to stop FLV proxy session:', error);
+  }
+};
 
 const handleStreamerDetails = (payload: { title: string; nickname: string; avatarUrl: string | null; isLive: boolean | null }) => {
   if (payload.title) {
@@ -374,6 +389,41 @@ function updateFullscreenFlag() {
   isFullScreen.value = isInNativePlayerFullscreen.value || isInWebFullscreen.value;
   emit('fullscreen-change', isFullScreen.value);
 }
+
+const applyShouldPlayState = async () => {
+  const shouldPlay = props.shouldPlay ?? true;
+  const keepPlayingInCompactMode = props.compactMode === true;
+  const effectiveShouldPlay = shouldPlay || keepPlayingInCompactMode;
+  const player = playerInstance.value;
+  if (!player) {
+    return;
+  }
+
+  if (!effectiveShouldPlay) {
+    try {
+      player.pause();
+    } catch (error) {
+      console.warn('[Player] Failed to pause hidden room player:', error);
+    }
+    return;
+  }
+
+  if (isLoadingStream.value || isOfflineError.value || !!streamError.value) {
+    return;
+  }
+
+  try {
+    const playResult = player.play?.();
+    if (playResult && typeof (playResult as Promise<void>).then === 'function') {
+      await playResult;
+    }
+  } catch (error) {
+    console.warn('[Player] Failed to resume player, retrying with stream reload:', error);
+    if (!isLoadingStream.value && props.roomId && props.platform != null) {
+      await reloadCurrentStream('refresh');
+    }
+  }
+};
 
 function destroyPlayerInstance() {
   const player = playerInstance.value;
@@ -755,6 +805,8 @@ async function initializePlayerAndStream(
     playerAnchorName.value = props.anchorName;
     playerAvatar.value = props.avatar;
     playerIsLive.value = false;
+    await stopCurrentDanmakuListener();
+    await stopCurrentFlvProxySession();
     destroyPlayerInstance();
     isLoadingStream.value = false;
     return;
@@ -762,19 +814,18 @@ async function initializePlayerAndStream(
 
   if (oldRoomIdForCleanup && oldPlatformForCleanup !== undefined && oldPlatformForCleanup !== null) {
     await stopCurrentDanmakuListener(oldPlatformForCleanup, oldRoomIdForCleanup);
-    if (oldPlatformForCleanup === StreamingPlatform.DOUYU) {
-      await stopDouyuProxy();
-    }
   } else {
     await stopCurrentDanmakuListener();
   }
+  await stopCurrentFlvProxySession();
 
   destroyPlayerInstance();
 
   const effectiveLine = resolveCurrentLineFor(pPlatform, currentLine.value);
 
   try {
-    let streamConfig: { streamUrl: string; streamType: string | undefined };
+    let streamConfig: { streamUrl: string; streamType: string | undefined; proxySessionId?: string };
+    let pendingProxySessionId: string | null = null;
 
     if (pPlatform === StreamingPlatform.DOUYU) {
       if (playerIsLive.value === false) {
@@ -809,10 +860,13 @@ async function initializePlayerAndStream(
       throw new Error(`不支持的平台: ${pPlatform}`);
     }
 
+    pendingProxySessionId = streamConfig.proxySessionId ?? null;
+    currentFlvProxySessionId.value = pendingProxySessionId;
     isLoadingStream.value = false;
     await mountXgPlayer(streamConfig.streamUrl, pPlatform, pRoomId, streamConfig.streamType);
   } catch (error: any) {
     console.error(`[Player] Error initializing stream for ${pPlatform} room ${pRoomId}:`, error);
+    await stopCurrentFlvProxySession();
     destroyPlayerInstance();
 
     const errorMessage = error?.message || '加载直播流失败，请稍后再试。';
@@ -1027,7 +1081,7 @@ registerPlayerWatchers({
   initializeQualityPreference,
   initializePlayerAndStream,
   stopCurrentDanmakuListener,
-  stopDouyuProxy,
+  stopCurrentFlvProxySession,
   destroyPlayerInstance,
   isLoadingStream,
   danmakuMessages,
@@ -1064,6 +1118,14 @@ watch(
       playerInstance.value.muted = muted;
     }
   },
+);
+
+watch(
+  [() => props.shouldPlay, playerInstance, isLoadingStream, streamError, isOfflineError],
+  () => {
+    void applyShouldPlayState();
+  },
+  { immediate: true },
 );
 
 // Auto-collapse danmu panel in compact/multi-room mode
@@ -1116,10 +1178,7 @@ onUnmounted(async () => {
   const platformToStop: StreamingPlatform = props.platform;
   const roomIdToStop: string | null = props.roomId;
   await stopCurrentDanmakuListener(platformToStop, roomIdToStop);
-
-  if (props.platform === StreamingPlatform.DOUYU) {
-    await stopDouyuProxy();
-  }
+  await stopCurrentFlvProxySession();
 
   destroyPlayerInstance();
   danmakuMessages.value = []; 

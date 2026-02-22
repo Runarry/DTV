@@ -3,6 +3,8 @@ import { listen, type Event as TauriEvent } from '@tauri-apps/api/event';
 import { Ref } from 'vue';
 import type { DanmakuMessage, DanmuOverlayInstance, DanmuRenderOptions } from '../../components/player/types';
 import { v4 as uuidv4 } from 'uuid';
+import { startFlvProxySession } from '../common/flvProxySession';
+import { Platform } from '../common/types';
 
 // 统一的 Rust 弹幕事件负载（与 Douyin/Huya 保持一致）
 export interface UnifiedRustDanmakuPayload {
@@ -13,13 +15,11 @@ export interface UnifiedRustDanmakuPayload {
   fans_club_level: number;
 }
 
-let douyuProxyActive = false;
-
 export async function getDouyuStreamConfig(
   roomId: string,
   quality: string = '原画',
   line?: string | null,
-): Promise<{ streamUrl: string, streamType: string | undefined }> {
+): Promise<{ streamUrl: string, streamType: string | undefined, proxySessionId?: string }> {
   let finalStreamUrl: string | null = null;
   let streamType: string | undefined = undefined;
   const MAX_STREAM_FETCH_ATTEMPTS = 2;
@@ -70,10 +70,12 @@ export async function getDouyuStreamConfig(
   }
 
   try {
-    await invoke<string>('start_proxy');
-    const proxyUrl = `http://127.0.0.1:34719/live.flv?url=${encodeURIComponent(finalStreamUrl)}`;
-    douyuProxyActive = true;
-    return { streamUrl: proxyUrl, streamType };
+    const session = await startFlvProxySession({
+      upstreamUrl: finalStreamUrl,
+      platform: Platform.DOUYU,
+      roomId,
+    });
+    return { streamUrl: session.proxyUrl, streamType, proxySessionId: session.sessionId };
   } catch (e: any) {
     throw new Error(`设置斗鱼代理失败: ${e.message}`);
   }
@@ -151,19 +153,6 @@ export async function stopDouyuDanmaku(roomId: string, currentUnlistenFn: (() =>
     }
   } catch (error) {
     console.error('[DouyuPlayerHelper] Error invoking stop_danmaku_listener for Douyu:', error);
-  }
-}
-
-export async function stopDouyuProxy(): Promise<void> {
-  if (!douyuProxyActive) {
-    return;
-  }
-  try {
-    await invoke('stop_proxy');
-    douyuProxyActive = false;
-  } catch (e) {
-    console.error('[DouyuPlayerHelper] Error stopping proxy server:', e);
-    douyuProxyActive = false;
   }
 }
 

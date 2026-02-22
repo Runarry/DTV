@@ -34,7 +34,7 @@ export const useMultiRoomStore = defineStore('multiRoom', {
       const id = `${platform}:${roomId}`;
       const existing = this.rooms.find(r => r.id === id);
       if (existing) {
-        // Room already open, set active via shared logic to keep mute state in sync
+        // Room already open, just switch active room.
         this.setActiveRoom(id);
         if (meta) {
           if (meta.title !== undefined) existing.title = meta.title;
@@ -63,16 +63,12 @@ export const useMultiRoomStore = defineStore('multiRoom', {
         anchorName: meta?.anchorName,
         avatar: meta?.avatar,
         isLive: meta?.isLive,
-        isMuted: this.rooms.length > 0, // First room unmuted, others muted
+        // In fully-open audio mode, each room keeps independent mute state.
+        isMuted: false,
       };
 
       this.rooms.push(newRoom);
       this.activeRoomId = id;
-
-      // Mute all other rooms when a new room becomes active
-      for (const room of this.rooms) {
-        room.isMuted = room.id !== id;
-      }
     },
 
     closeRoom(id: string) {
@@ -84,11 +80,6 @@ export const useMultiRoomStore = defineStore('multiRoom', {
       if (this.activeRoomId === id) {
         // Transfer active to first remaining room
         this.activeRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
-        // Unmute the new active room
-        if (this.activeRoomId) {
-          const newActive = this.rooms.find(r => r.id === this.activeRoomId);
-          if (newActive) newActive.isMuted = false;
-        }
       }
     },
 
@@ -97,24 +88,12 @@ export const useMultiRoomStore = defineStore('multiRoom', {
       if (!room) return;
 
       this.activeRoomId = id;
-      // Mute all rooms except the active one
-      for (const r of this.rooms) {
-        r.isMuted = r.id !== id;
-      }
     },
 
     toggleMute(id: string) {
       const room = this.rooms.find(r => r.id === id);
       if (!room) return;
       room.isMuted = !room.isMuted;
-
-      // If unmuting, this becomes the active room and mute others
-      if (!room.isMuted) {
-        this.activeRoomId = id;
-        for (const r of this.rooms) {
-          if (r.id !== id) r.isMuted = true;
-        }
-      }
     },
 
     setLayoutMode(mode: LayoutMode) {

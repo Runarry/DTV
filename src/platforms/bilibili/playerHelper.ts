@@ -4,12 +4,14 @@ import type { LiveStreamInfo, StreamVariant } from '../common/types';
 import type { Ref } from 'vue';
 import type { DanmakuMessage, DanmuOverlayInstance, DanmuRenderOptions } from '../../components/player/types';
 import { v4 as uuidv4 } from 'uuid';
+import { startFlvProxySession } from '../common/flvProxySession';
+import { Platform } from '../common/types';
 
 export async function getBilibiliStreamConfig(
   roomId: string,
   quality: string = '原画',
   cookie?: string,
-): Promise<{ streamUrl: string, streamType: string | undefined }> {
+): Promise<{ streamUrl: string, streamType: string | undefined, proxySessionId?: string }> {
   if (!roomId) {
     throw new Error('房间ID未提供');
   }
@@ -106,7 +108,16 @@ export async function getBilibiliStreamConfig(
     streamType = 'flv';
   }
 
-  return { streamUrl: result.stream_url, streamType };
+  if (streamType === 'flv') {
+    const session = await startFlvProxySession({
+      upstreamUrl: result.stream_url,
+      platform: Platform.BILIBILI,
+      roomId,
+    });
+    return { streamUrl: session.proxyUrl, streamType, proxySessionId: session.sessionId };
+  }
+
+  return { streamUrl: result.stream_url, streamType, proxySessionId: undefined };
 }
 
 // 统一的 Rust 弹幕事件负载（与 Douyin/Douyu/Huya 保持一致）

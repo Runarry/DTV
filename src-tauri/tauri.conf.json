@@ -19,6 +19,7 @@
           "y": 33
         },
         "transparent": false,
+        "decorations": false,
         "title": "",
         "fullscreen": false,
         "resizable": true,

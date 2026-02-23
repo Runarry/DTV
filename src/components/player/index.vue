@@ -203,9 +203,10 @@ const showDanmuPanel = computed(() => windowWidth.value >= MIN_DANMU_WIDTH);
 const isDanmuCollapsed = ref(
   typeof window !== 'undefined' && window.localStorage.getItem(DANMU_COLLAPSED_STORAGE_KEY) === '1',
 );
+const autoCollapsedByCompact = ref(false);
 const canToggleDanmuPanel = computed(() => showDanmuPanel.value && !!props.roomId && !isLoadingStream.value && !streamError.value);
 const isDanmuVisible = computed(() => canToggleDanmuPanel.value && !isDanmuCollapsed.value);
-const showCompactIsland = computed(() => isDanmuCollapsed.value && canToggleDanmuPanel.value && !isFullScreen.value);
+const showCompactIsland = computed(() => !props.compactMode && (props.shouldPlay ?? true) && isDanmuCollapsed.value && canToggleDanmuPanel.value && !isFullScreen.value);
 let islandDispatchRaf: number | null = null;
 let pendingIslandPayload: {
   visible: boolean;
@@ -219,6 +220,7 @@ let pendingIslandSignature = '';
 let lastIslandSignature = '';
 
 const collapseDanmuPanel = () => {
+  autoCollapsedByCompact.value = false;
   isDanmuCollapsed.value = true;
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(DANMU_COLLAPSED_STORAGE_KEY, '1');
@@ -226,6 +228,10 @@ const collapseDanmuPanel = () => {
 };
 
 const expandDanmuPanel = () => {
+  if (props.compactMode) {
+    return;
+  }
+  autoCollapsedByCompact.value = false;
   isDanmuCollapsed.value = false;
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(DANMU_COLLAPSED_STORAGE_KEY, '0');
@@ -242,6 +248,9 @@ const handleForceResume = () => {
 
 const broadcastIslandState = () => {
   if (typeof window === 'undefined') {
+    return;
+  }
+  if (props.shouldPlay === false) {
     return;
   }
   const payload = {
@@ -400,9 +409,7 @@ function updateFullscreenFlag() {
 
 const applyShouldPlayState = async (options?: { allowReloadOnPlayError?: boolean }) => {
   const allowReloadOnPlayError = options?.allowReloadOnPlayError ?? true;
-  const shouldPlay = props.shouldPlay ?? true;
-  const keepPlayingInCompactMode = props.compactMode === true;
-  const effectiveShouldPlay = shouldPlay || keepPlayingInCompactMode;
+  const effectiveShouldPlay = props.shouldPlay ?? true;
   const player = playerInstance.value;
   if (!player) {
     return;
@@ -1109,7 +1116,7 @@ registerPlayerWatchers({
 });
 
 watch(showDanmuPanel, (available) => {
-  if (!available) {
+  if (!available && !autoCollapsedByCompact.value) {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(DANMU_COLLAPSED_STORAGE_KEY, isDanmuCollapsed.value ? '1' : '0');
     }
@@ -1147,7 +1154,13 @@ watch(
   () => props.compactMode,
   (compact) => {
     if (compact && !isDanmuCollapsed.value) {
+      autoCollapsedByCompact.value = true;
       isDanmuCollapsed.value = true;
+      return;
+    }
+    if (!compact && autoCollapsedByCompact.value) {
+      autoCollapsedByCompact.value = false;
+      isDanmuCollapsed.value = false;
     }
   },
   { immediate: true },

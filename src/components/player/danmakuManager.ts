@@ -72,7 +72,7 @@ export const startCurrentDanmakuListener = async (
     const renderOptions = {
       shouldDisplay: (message?: DanmakuMessage) =>
         ctx.isDanmuEnabled.value && !isBlockedMessage(message),
-      shouldAppendToList: () => !ctx.isDanmuListCollapsed.value && !ctx.isFullScreen.value,
+      shouldAppendToList: () => true,
       buildCommentOptions: () => ({
         duration: ctx.danmuSettings.duration,
         mode: ctx.danmuSettings.mode,

@@ -20,7 +20,7 @@ export const useMultiRoomStore = defineStore('multiRoom', {
   state: () => ({
     rooms: [] as OpenRoom[],
     activeRoomId: null as string | null,
-    layoutMode: 'split' as LayoutMode,
+    layoutMode: 'single' as LayoutMode,
   }),
 
   getters: {

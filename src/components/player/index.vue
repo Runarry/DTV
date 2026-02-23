@@ -190,7 +190,7 @@ const emit = defineEmits<{
 }>();
 
 const isClosing = ref(false);
-const MIN_DANMU_WIDTH = 1100;
+const MIN_DANMU_WIDTH = 900;
 const DANMU_COLLAPSED_STORAGE_KEY = 'dtv_player_danmu_collapsed';
 const PLAYER_ISLAND_EVENT = 'dtv-player-island-state';
 const PLAYER_ISLAND_EXPAND_EVENT = 'dtv-player-island-expand';

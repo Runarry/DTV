@@ -175,7 +175,10 @@ import { useImageProxy } from '../FollowsList/useProxy';
 // Ensure image proxy helpers are available in this component
 const { ensureProxyStarted, proxify } = useImageProxy();
 
-const props = defineProps<PlayerProps>();
+const props = withDefaults(defineProps<PlayerProps>(), {
+  shouldPlay: true,
+  compactMode: false,
+});
 
 const emit = defineEmits<{
   (e: 'follow', streamer: any): void;

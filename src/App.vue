@@ -65,7 +65,6 @@ const route = useRoute();
 const followStore = useFollowStore();
 const multiRoomStore = useMultiRoomStore();
 const navigationStore = useNavigationStore();
-navigationStore.loadFromStorage();
 
 const isSidebarCollapsed = ref(false);
 const isPlayerFullscreen = ref(false);

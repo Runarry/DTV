@@ -12,15 +12,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { useMultiRoomStore } from '../../stores/multiRoom';
 import PlayerSlot from './PlayerSlot.vue';
 
 const store = useMultiRoomStore();
-const router = useRouter();
 
 const emit = defineEmits<{
   (e: 'fullscreen-change', isFullscreen: boolean): void;
+  (e: 'empty'): void;
 }>();
 
 const gridClass = computed(() => {
@@ -33,7 +32,7 @@ const gridClass = computed(() => {
 const handleCloseRoom = (id: string) => {
   store.closeRoom(id);
   if (store.roomCount === 0) {
-    router.replace('/');
+    emit('empty');
   }
 };
 

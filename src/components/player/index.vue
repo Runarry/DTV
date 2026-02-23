@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onActivated, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
 import Player from 'xgplayer';
 import FlvPlugin from 'xgplayer-flv';
 import HlsPlugin from 'xgplayer-hls.js';
@@ -191,6 +191,7 @@ const MIN_DANMU_WIDTH = 1100;
 const DANMU_COLLAPSED_STORAGE_KEY = 'dtv_player_danmu_collapsed';
 const PLAYER_ISLAND_EVENT = 'dtv-player-island-state';
 const PLAYER_ISLAND_EXPAND_EVENT = 'dtv-player-island-expand';
+const FORCE_RESUME_EVENT = 'dtv-force-resume-players';
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 0);
 const updateWindowWidth = () => {
   windowWidth.value = typeof window !== 'undefined' ? window.innerWidth : 0;
@@ -230,6 +231,10 @@ const expandDanmuPanel = () => {
 
 const toggleDanmuFilterPanel = () => {
   danmuListRef.value?.toggleFilterPanel?.();
+};
+
+const handleForceResume = () => {
+  void applyShouldPlayState({ allowReloadOnPlayError: false });
 };
 
 const broadcastIslandState = () => {
@@ -390,7 +395,8 @@ function updateFullscreenFlag() {
   emit('fullscreen-change', isFullScreen.value);
 }
 
-const applyShouldPlayState = async () => {
+const applyShouldPlayState = async (options?: { allowReloadOnPlayError?: boolean }) => {
+  const allowReloadOnPlayError = options?.allowReloadOnPlayError ?? true;
   const shouldPlay = props.shouldPlay ?? true;
   const keepPlayingInCompactMode = props.compactMode === true;
   const effectiveShouldPlay = shouldPlay || keepPlayingInCompactMode;
@@ -412,14 +418,19 @@ const applyShouldPlayState = async () => {
     return;
   }
 
+  const videoElement = player.root?.querySelector('video') as HTMLVideoElement | null;
+  if (videoElement && !videoElement.paused && !videoElement.ended) {
+    return;
+  }
+
   try {
     const playResult = player.play?.();
     if (playResult && typeof (playResult as Promise<void>).then === 'function') {
       await playResult;
     }
   } catch (error) {
-    console.warn('[Player] Failed to resume player, retrying with stream reload:', error);
-    if (!isLoadingStream.value && props.roomId && props.platform != null) {
+    console.warn('[Player] Failed to resume player:', error);
+    if (allowReloadOnPlayError && !isLoadingStream.value && props.roomId && props.platform != null) {
       await reloadCurrentStream('refresh');
     }
   }
@@ -1164,7 +1175,12 @@ onMounted(async () => {
 
   if (typeof window !== 'undefined') {
     window.addEventListener(PLAYER_ISLAND_EXPAND_EVENT, expandDanmuPanel);
+    window.addEventListener(FORCE_RESUME_EVENT, handleForceResume as EventListener);
   }
+});
+
+onActivated(() => {
+  void applyShouldPlayState({ allowReloadOnPlayError: false });
 });
 
 onUnmounted(async () => {
@@ -1185,6 +1201,7 @@ onUnmounted(async () => {
 
   if (typeof window !== 'undefined') {
     window.removeEventListener(PLAYER_ISLAND_EXPAND_EVENT, expandDanmuPanel);
+    window.removeEventListener(FORCE_RESUME_EVENT, handleForceResume as EventListener);
     window.dispatchEvent(new CustomEvent(PLAYER_ISLAND_EVENT, {
       detail: { visible: false, anchorName: '', title: '', avatarUrl: null, roomId: null, platform: null },
     }));

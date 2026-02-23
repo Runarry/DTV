@@ -84,6 +84,31 @@
       </button>
     </div>
 
+    <div
+      v-if="hasMinimizedMultiRooms"
+      class="navbar-multi-room-island"
+      data-tauri-drag-region="false"
+      role="button"
+      tabindex="0"
+      @click="openMinimizedMultiRooms"
+      @keydown.enter.prevent="openMinimizedMultiRooms"
+      @keydown.space.prevent="openMinimizedMultiRooms"
+    >
+      <div class="navbar-multi-room-island__content">
+        <span class="navbar-multi-room-island__count">已最小化 {{ multiRoomStore.roomCount }} 个直播间</span>
+        <span class="navbar-multi-room-island__rooms" :title="minimizedRoomsLabel">{{ minimizedRoomsLabel }}</span>
+      </div>
+      <button
+        type="button"
+        class="navbar-multi-room-island__close"
+        title="全部关闭"
+        data-tauri-drag-region="false"
+        @click.stop="closeMinimizedMultiRooms"
+      >
+        <X :size="13" />
+      </button>
+    </div>
+
     <div class="nav-actions" :class="{ 'nav-actions--windows': shouldShowWindowsControls }" data-tauri-drag-region>
       <div v-if="!shouldCompactSearch" class="search-container" ref="searchContainerRef" data-tauri-drag-region="false">
           <div class="search-shell" :class="{ focused: isSearchFocused }">
@@ -278,7 +303,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { platform as detectPlatform } from '@tauri-apps/plugin-os';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { getVersion } from '@tauri-apps/api/app';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ChevronDown, Github, LayoutGrid, Moon, Search, Sun, X } from 'lucide-vue-next';
 import { motion } from 'motion-v';
 import WindowsWindowControls from '../components/window-controls/WindowsWindowControls.vue';
@@ -287,6 +312,7 @@ import { Platform } from '../platforms/common/types';
 import type { Platform as UiPlatform } from './types';
 import { useFollowStore } from '../store/followStore';
 import { useCustomCategoryStore } from '../store/customCategoryStore';
+import { useMultiRoomStore } from '../stores/multiRoom';
 
 interface DouyinApiStreamInfo {
   title?: string | null;
@@ -389,6 +415,8 @@ const platforms = computed(() => {
 });
 const effectiveTheme = computed(() => themeStore.getEffectiveTheme());
 const route = useRoute();
+const router = useRouter();
+const multiRoomStore = useMultiRoomStore();
 
 const detectedPlatform = ref<string | null>(null);
 const isMacPreview = false;
@@ -440,8 +468,31 @@ const islandDisplayTitle = computed(() => {
   return '直播间';
 });
 
-const shouldCompactSearch = computed(() => playerIsland.value.visible);
+const hasMinimizedMultiRooms = computed(() => {
+  const name = route.name as string | undefined;
+  return name !== 'multiPlayer' && multiRoomStore.roomCount > 0;
+});
+const minimizedRoomsLabel = computed(() => {
+  const previews = multiRoomStore.rooms
+    .slice(0, 2)
+    .map((room) => room.anchorName || room.roomId)
+    .filter(Boolean);
+  if (previews.length === 0) {
+    return '点击恢复观看';
+  }
+  if (multiRoomStore.roomCount <= 2) {
+    return previews.join(' · ');
+  }
+  return `${previews.join(' · ')} 等 ${multiRoomStore.roomCount} 个房间`;
+});
+const shouldCompactSearch = computed(() => playerIsland.value.visible || hasMinimizedMultiRooms.value);
 const showSearchPopup = ref(false);
+const openMinimizedMultiRooms = () => {
+  router.push({ name: 'multiPlayer' });
+};
+const closeMinimizedMultiRooms = () => {
+  multiRoomStore.clearAll();
+};
 
 const openSearchPopup = async () => {
   showSearchPopup.value = true;
@@ -1036,6 +1087,82 @@ const tryEnterRoom = (roomId: string) => {
   box-shadow: none;
 }
 
+.navbar-multi-room-island {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 39;
+  width: min(360px, calc(100% - 620px));
+  min-height: 42px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(248, 250, 252, 0.96);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar-multi-room-island__content {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navbar-multi-room-island:hover {
+  transform: translate(-50%, -51%);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+}
+
+.navbar-multi-room-island:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 1px;
+}
+
+.navbar-multi-room-island__count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.navbar-multi-room-island__rooms {
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.navbar-multi-room-island__close {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.8);
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.navbar-multi-room-island__close:hover {
+  background: rgba(203, 213, 225, 0.9);
+  border-color: rgba(100, 116, 139, 0.6);
+  color: #0f172a;
+}
+
 .navbar-player-island__left {
   display: flex;
   align-items: center;
@@ -1147,6 +1274,33 @@ const tryEnterRoom = (roomId: string) => {
   border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
+:global([data-theme='light']) .navbar-multi-room-island,
+:global(html[data-theme='light']) .navbar-multi-room-island,
+:global(:root[data-theme='light']) .navbar-multi-room-island {
+  background: rgba(248, 250, 252, 0.96);
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+:global([data-theme='light']) .navbar-multi-room-island__count,
+:global(html[data-theme='light']) .navbar-multi-room-island__count,
+:global(:root[data-theme='light']) .navbar-multi-room-island__count {
+  color: #0f172a;
+}
+
+:global([data-theme='light']) .navbar-multi-room-island__rooms,
+:global(html[data-theme='light']) .navbar-multi-room-island__rooms,
+:global(:root[data-theme='light']) .navbar-multi-room-island__rooms {
+  color: #475569;
+}
+
+:global([data-theme='light']) .navbar-multi-room-island__close,
+:global(html[data-theme='light']) .navbar-multi-room-island__close,
+:global(:root[data-theme='light']) .navbar-multi-room-island__close {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: rgba(226, 232, 240, 0.8);
+  color: #334155;
+}
+
 :global([data-theme='light']) .navbar-player-island__avatar,
 :global(html[data-theme='light']) .navbar-player-island__avatar,
 :global(:root[data-theme='light']) .navbar-player-island__avatar {
@@ -1201,6 +1355,33 @@ const tryEnterRoom = (roomId: string) => {
   background: rgba(248, 250, 252, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: none;
+}
+
+:global([data-theme='dark']) .navbar-multi-room-island,
+:global(html[data-theme='dark']) .navbar-multi-room-island,
+:global(:root[data-theme='dark']) .navbar-multi-room-island {
+  background: rgba(248, 250, 252, 0.96);
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+:global([data-theme='dark']) .navbar-multi-room-island__count,
+:global(html[data-theme='dark']) .navbar-multi-room-island__count,
+:global(:root[data-theme='dark']) .navbar-multi-room-island__count {
+  color: #0f172a;
+}
+
+:global([data-theme='dark']) .navbar-multi-room-island__rooms,
+:global(html[data-theme='dark']) .navbar-multi-room-island__rooms,
+:global(:root[data-theme='dark']) .navbar-multi-room-island__rooms {
+  color: #475569;
+}
+
+:global([data-theme='dark']) .navbar-multi-room-island__close,
+:global(html[data-theme='dark']) .navbar-multi-room-island__close,
+:global(:root[data-theme='dark']) .navbar-multi-room-island__close {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: rgba(226, 232, 240, 0.8);
+  color: #334155;
 }
 
 :global([data-theme='dark']) .navbar-player-island__avatar,

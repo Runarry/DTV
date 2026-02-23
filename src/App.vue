@@ -21,7 +21,13 @@
       />
 
       <main class="app-body" :class="{ 'app-body--player': isPlayerRoute }">
+        <PersistentMultiRoomHost
+          v-if="multiRoomStore.roomCount > 0"
+          :visible="isMultiPlayerRoute"
+          @fullscreen-change="handleFullscreenChange"
+        />
         <router-view
+          v-if="!isMultiPlayerRoute"
           v-slot="{ Component, route }"
           @follow="handleFollowStore"
           @unfollow="handleUnfollowStore"
@@ -39,10 +45,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from './layout/Navbar.vue';
 import Sidebar from './layout/Sidebar.vue';
+import PersistentMultiRoomHost from './components/MultiRoom/PersistentMultiRoomHost.vue';
 import type { Platform as UiPlatform } from './layout/types';
 import { useThemeStore } from './stores/theme';
 import { useFollowStore } from './store/followStore';
@@ -73,6 +80,7 @@ const routePlatform = computed<UiPlatform>(() => {
 });
 
 const activePlatform = computed<UiPlatform>(() => routePlatform.value);
+const isMultiPlayerRoute = computed(() => route.name === 'multiPlayer');
 
 const followedStreamers = computed<FollowedStreamer[]>(() => followStore.getFollowedStreamers);
 
@@ -90,6 +98,16 @@ const isPlayerRoute = computed(() => {
 const shouldHidePlayerChrome = computed(() => (
   isPlayerRoute.value && isPlayerFullscreen.value
 ));
+
+watch(
+  [isMultiPlayerRoute, () => multiRoomStore.roomCount],
+  ([isMulti, roomCount]) => {
+    if (isMulti && roomCount === 0) {
+      router.replace({ name: 'DouyuHome' });
+    }
+  },
+  { immediate: true },
+);
 
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;

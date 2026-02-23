@@ -22,11 +22,12 @@
 }
 
 /* Web 全屏全局标记下，强制移除页面 padding 与容器圆角 */
-.web-fs-active .player-page {
+html.web-fs-active .player-page {
   padding: 0 !important;
 }
 
-.web-fs-active .player-container {
+html.web-fs-active .player-container,
+.player-page.web-fs .player-container {
   border-radius: 0 !important;
   border: none !important;
   box-shadow: none !important;
@@ -205,70 +206,6 @@
 :deep(.danmu-control-group:hover) {
   background: rgba(34, 38, 50, 0.8);
   border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* 确保全屏时播放器容器也能正确显示 */
-:deep(.xgplayer-is-fullscreen) .player-container,
-:deep(.xgplayer-is-cssfullscreen) .player-container {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100vh !important;
-  width: 100vw !important;
-  border-radius: 0 !important;
-}
-
-/* Windows/WebView 兼容：不使用 :deep 的全屏选择器 */
-.xgplayer-is-fullscreen .player-container,
-.xgplayer-is-cssfullscreen .player-container {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100vh !important;
-  width: 100vw !important;
-  border-radius: 0 !important;
-}
-
-/* 全屏模式下播放器内容的显示 */
-:deep(.xgplayer-is-fullscreen) .streamer-info,
-:deep(.xgplayer-is-cssfullscreen) .streamer-info {
-  display: none !important;
-  margin: 0 !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-/* Windows/WebView 兼容：隐藏非视频内容 */
-.xgplayer-is-fullscreen .streamer-info,
-.xgplayer-is-cssfullscreen .streamer-info {
-  display: none !important;
-  margin: 0 !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-/* 全屏模式下视频容器样式 */
-:deep(.xgplayer-is-fullscreen) .video-container,
-:deep(.xgplayer-is-cssfullscreen) .video-container {
-  flex: 1 !important;
-  height: auto !important;
-  min-height: auto !important;
-  border-radius: 0 !important;
-}
-
-/* Windows/WebView 兼容：视频容器填充 */
-.xgplayer-is-fullscreen .video-container,
-.xgplayer-is-cssfullscreen .video-container {
-  flex: 1 !important;
-  height: auto !important;
-  min-height: auto !important;
-  border-radius: 0 !important;
 }
 
 /* 视频容器 - 修复可见性问题 */
@@ -851,153 +788,111 @@
   opacity: 0 !important;
 }
 
-html.web-fs-active .danmu-panel {
+html.web-fs-active .danmu-panel,
+.player-page.web-fs .danmu-panel {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
 }
 
-/* 处理网页全屏模式 - 更强的选择器 (保留作为备份方案) */
-:deep(.xgplayer-is-fullscreen)~.danmu-panel,
-:deep(.xgplayer-is-cssfullscreen)~.danmu-panel,
-:deep(.xgplayer.xgplayer-is-fullscreen)~.danmu-panel,
-:deep(.xgplayer.xgplayer-is-cssfullscreen)~.danmu-panel,
-:deep(.xgplayer-is-fullscreen)+.danmu-panel,
-:deep(.xgplayer-is-cssfullscreen)+.danmu-panel,
-.player-layout:has(:deep(.xgplayer-is-fullscreen)) .danmu-panel,
-.player-layout:has(:deep(.xgplayer-is-cssfullscreen)) .danmu-panel {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+/* 统一全屏入口：web-fs-active + player-page.web-fs */
+html.web-fs-active,
+html.web-fs-active body,
+html.web-fs-active #app,
+html.web-fs-active .app-shell {
+  height: 100dvh !important;
+  overflow: hidden !important;
 }
 
-/* Windows/WebView 兼容：隐藏弹幕面板 */
-.xgplayer-is-fullscreen~.danmu-panel,
-.xgplayer-is-cssfullscreen~.danmu-panel,
-.xgplayer.xgplayer-is-fullscreen~.danmu-panel,
-.xgplayer.xgplayer-is-cssfullscreen~.danmu-panel,
-.xgplayer-is-fullscreen+.danmu-panel,
-.xgplayer-is-cssfullscreen+.danmu-panel {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+@supports not (height: 100dvh) {
+  html.web-fs-active,
+  html.web-fs-active body,
+  html.web-fs-active #app,
+  html.web-fs-active .app-shell {
+    height: 100vh !important;
+  }
 }
 
-/* 播放器全屏模式下 */
-:deep(.xgplayer.xgplayer-is-fullscreen),
-:deep(.xgplayer.xgplayer-is-cssfullscreen),
-:deep(.xgplayer-is-fullscreen),
-:deep(.xgplayer-is-cssfullscreen) {
-  width: 100vw !important;
-  height: 100vh !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  z-index: 9999 !important;
-  background-color: #000 !important;
+html.web-fs-active .player-page,
+.player-page.web-fs {
+  padding: 0 !important;
+  background: #000 !important;
 }
 
-/* Windows/WebView 兼容：顶层全屏容器固定与充满 */
+html.web-fs-active .player-layout,
+.player-page.web-fs .player-layout {
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+html.web-fs-active .player-layout .main-content,
+.player-page.web-fs .player-layout .main-content {
+  padding-left: 0 !important;
+  overflow: hidden !important;
+}
+
+html.web-fs-active .player-container,
+.player-page.web-fs .player-container,
+html.web-fs-active .video-container,
+.player-page.web-fs .video-container,
+html.web-fs-active .video-player,
+.player-page.web-fs .video-player,
+html.web-fs-active .xgplayer,
+.player-page.web-fs .xgplayer {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: #000 !important;
+}
+
+/* 全屏播放器根容器：固定充满可视区 */
 .xgplayer.xgplayer-is-fullscreen,
 .xgplayer.xgplayer-is-cssfullscreen,
 .xgplayer-is-fullscreen,
 .xgplayer-is-cssfullscreen {
-  width: 100vw !important;
-  height: 100vh !important;
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
+  inset: 0 !important;
+  width: 100dvw !important;
+  height: 100dvh !important;
   z-index: 9999 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   background-color: #000 !important;
 }
 
-/* 移除 Artplayer 容器在全屏时的圆角（Windows 关键） */
-:deep(.xgplayer.xgplayer-is-fullscreen),
-:deep(.xgplayer.xgplayer-is-cssfullscreen) {
-  border-radius: 0 !important;
-  box-shadow: none !important;
+@supports not (height: 100dvh) {
+  .xgplayer.xgplayer-is-fullscreen,
+  .xgplayer.xgplayer-is-cssfullscreen,
+  .xgplayer-is-fullscreen,
+  .xgplayer-is-cssfullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+  }
 }
 
-/* Windows/WebView 兼容：移除全屏圆角与阴影 */
-.xgplayer.xgplayer-is-fullscreen,
-.xgplayer.xgplayer-is-cssfullscreen {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-/* 网页/系统全屏时移除页面内边距与圆角边框，仅显示视频内容 */
-.player-page.web-fs,
-.player-page:has(:deep(.xgplayer-is-cssfullscreen)),
-.player-page:has(:deep(.xgplayer-is-fullscreen)) {
-  padding: 0 !important;
-  background: #000 !important;
-}
-
-.player-page.web-fs .player-layout,
-.player-page:has(:deep(.xgplayer-is-cssfullscreen)) .player-layout,
-.player-page:has(:deep(.xgplayer-is-fullscreen)) .player-layout {
-  gap: 0 !important;
-  padding-right: 0 !important;
-}
-
-.web-fs-active .player-layout {
-  padding-right: 0 !important;
-}
-
-.player-page.web-fs .player-layout .main-content,
-.player-page:has(:deep(.xgplayer-is-cssfullscreen)) .player-layout .main-content,
-.player-page:has(:deep(.xgplayer-is-fullscreen)) .player-layout .main-content {
-  padding-left: 0 !important;
-}
-
-.web-fs-active .player-layout .main-content {
-  padding-left: 0 !important;
-}
-
-.player-page.web-fs .player-container,
-.player-page:has(:deep(.xgplayer-is-cssfullscreen)) .player-container,
-.player-page:has(:deep(.xgplayer-is-fullscreen)) .player-container {
-  border-radius: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  background: #000 !important;
-}
-
-.player-page.web-fs .video-container,
-.player-page:has(:deep(.xgplayer-is-cssfullscreen)) .video-container,
-.player-page:has(:deep(.xgplayer-is-fullscreen)) .video-container {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-/* 全屏模式下的播放器容器样式优化 */
-:deep(.xgplayer.xgplayer-is-fullscreen) .xgplayer-video,
-:deep(.xgplayer.xgplayer-is-cssfullscreen) .xgplayer-video {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
-  object-fit: contain !important;
-}
-
-/* Windows/WebView 兼容：视频元素填满容器 */
+/* 全屏模式下视频元素仅显示内容，不外溢 */
 .xgplayer.xgplayer-is-fullscreen .xgplayer-video,
 .xgplayer.xgplayer-is-cssfullscreen .xgplayer-video {
   width: 100% !important;
   height: 100% !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
+  max-width: 100dvw !important;
+  max-height: 100dvh !important;
   object-fit: contain !important;
 }
 
-/* 在 web-fs 环境下确保任何播放器容器没有圆角 */
-.player-page.web-fs .xgplayer {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  border: none !important;
-  background: #000 !important;
+@supports not (height: 100dvh) {
+  .xgplayer.xgplayer-is-fullscreen .xgplayer-video,
+  .xgplayer.xgplayer-is-cssfullscreen .xgplayer-video {
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+  }
 }
 
 /* 关闭按钮 */

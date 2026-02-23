@@ -1,5 +1,11 @@
 <template>
-  <div class="player-page" :class="{ 'web-fs': isInWebFullscreen || isInNativePlayerFullscreen }">
+  <div
+    class="player-page"
+    :class="{
+      'web-fs': isInWebFullscreen || isInNativePlayerFullscreen,
+      'player-page--compact': props.compactMode,
+    }"
+  >
     <button v-if="!isInWebFullscreen" @click="handleClosePlayerClick" class="player-close-btn" title="关闭播放器">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>

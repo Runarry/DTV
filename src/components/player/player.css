@@ -60,6 +60,70 @@
   box-sizing: border-box;
 }
 
+/* 多分屏紧凑模式：保留信息栏，但收紧垂直占用避免四分屏裁切 */
+.player-page--compact {
+  padding: 6px 0 6px 4px;
+}
+
+.player-page--compact .player-layout {
+  padding-right: 6px !important;
+}
+
+.player-page--compact .player-container,
+.player-page--compact .video-container,
+.player-page--compact .video-player,
+.player-page--compact .loading-player {
+  min-height: 0 !important;
+}
+
+.player-page--compact .streamer-info {
+  padding: 10px 12px !important;
+}
+
+.player-page--compact .streamer-layout {
+  gap: 12px !important;
+}
+
+.player-page--compact .avatar-wrapper {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+}
+
+.player-page--compact .room-title {
+  font-size: 0.9rem !important;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.player-page--compact .streamer-meta-row {
+  gap: 10px !important;
+}
+
+.player-page--compact .streamer-actions {
+  gap: 8px !important;
+}
+
+.player-page--compact .record-btn {
+  height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 0.74rem !important;
+}
+
+.player-page--compact .id-follow-container {
+  min-width: 178px !important;
+}
+
+.player-page--compact .streamer-id,
+.player-page--compact .follow-btn {
+  padding: 6px 10px !important;
+}
+
+.player-page--compact .follow-btn {
+  min-width: 78px !important;
+  font-size: 0.76rem !important;
+}
+
 /* 播放器容器 */
 .player-container {
   display: flex;

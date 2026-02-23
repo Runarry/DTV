@@ -430,7 +430,8 @@ const isWindowsPlatform = computed(() => {
 const shouldShowWindowsControls = computed(() => isWindowsPlatform.value);
 const isPlayerRoute = computed(() => {
   const name = route.name as string | undefined;
-  return name === 'douyuPlayer' || name === 'douyinPlayer' || name === 'huyaPlayer' || name === 'bilibiliPlayer';
+  // multiPlayer must be treated as player route; otherwise collapsed danmu panel has no restore entry.
+  return name === 'douyuPlayer' || name === 'douyinPlayer' || name === 'huyaPlayer' || name === 'bilibiliPlayer' || name === 'multiPlayer';
 });
 const PLAYER_ISLAND_EVENT = 'dtv-player-island-state';
 const PLAYER_ISLAND_EXPAND_EVENT = 'dtv-player-island-expand';

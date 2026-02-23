@@ -415,12 +415,8 @@ const applyShouldPlayState = async (options?: { allowReloadOnPlayError?: boolean
     return;
   }
 
+  // shouldPlay only gates resume attempts; we never auto-pause players.
   if (!effectiveShouldPlay) {
-    try {
-      player.pause();
-    } catch (error) {
-      console.warn('[Player] Failed to pause hidden room player:', error);
-    }
     return;
   }
 

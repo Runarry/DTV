@@ -201,7 +201,10 @@ pub async fn start_huya_danmaku_listener(
                                 );
                                 match decode_msg_tars(&bin)? {
                                     Some((nick, text)) => {
-                                        println!("[Huya Danmaku] decoded chat: {} -> {}", nick, text);
+                                        println!(
+                                            "[Huya Danmaku] decoded chat: {} -> {}",
+                                            nick, text
+                                        );
                                         info!("[Huya Danmaku] decoded chat: {} -> {}", nick, text);
                                         let _ = app_handle_clone.emit(
                                             "danmaku-message",
@@ -578,4 +581,3 @@ fn decode_msg_tars(data: &[u8]) -> anyhow::Result<Option<(String, String)>> {
     }
     Ok(ret)
 }
-

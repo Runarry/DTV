@@ -45,8 +45,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { invoke } from '@tauri-apps/api/core';
 import Navbar from './layout/Navbar.vue';
 import Sidebar from './layout/Sidebar.vue';
 import PersistentMultiRoomHost from './components/MultiRoom/PersistentMultiRoomHost.vue';
@@ -169,6 +170,24 @@ const handleReorderListStore = (reorderedList: FollowedStreamer[]) => {
 const handleFullscreenChange = (isFullscreen: boolean) => {
   isPlayerFullscreen.value = isFullscreen;
 };
+
+const handleBeforeUnload = () => {
+  void invoke('stop_all_live_recordings').catch((error) => {
+    console.warn('[App] stop_all_live_recordings failed during unload:', error);
+  });
+};
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  }
+});
 </script>
 
 <style scoped>

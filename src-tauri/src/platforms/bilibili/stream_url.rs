@@ -482,33 +482,29 @@ pub async fn get_bilibili_live_stream_url_with_quality(
     };
 
     match selected_stream {
-        SelectedStream::Flv(real_url) => {
-            Ok(crate::platforms::common::LiveStreamInfo {
-                title: init_json["data"]["title"].as_str().map(|s| s.to_string()),
-                anchor_name: init_json["data"]["uname"].as_str().map(|s| s.to_string()),
-                avatar: None,
-                stream_url: Some(real_url.clone()),
-                status: Some(1),
-                error_message: None,
-                upstream_url: Some(real_url),
-                available_streams: Some(variants_for_response.clone()),
-                normalized_room_id: None,
-                web_rid: None,
-            })
-        }
-        SelectedStream::Hls(real_url) => {
-            Ok(crate::platforms::common::LiveStreamInfo {
-                title: init_json["data"]["title"].as_str().map(|s| s.to_string()),
-                anchor_name: init_json["data"]["uname"].as_str().map(|s| s.to_string()),
-                avatar: None,
-                stream_url: Some(real_url.clone()),
-                status: Some(1),
-                error_message: None,
-                upstream_url: Some(real_url),
-                available_streams: Some(variants_for_response),
-                normalized_room_id: None,
-                web_rid: None,
-            })
-        }
+        SelectedStream::Flv(real_url) => Ok(crate::platforms::common::LiveStreamInfo {
+            title: init_json["data"]["title"].as_str().map(|s| s.to_string()),
+            anchor_name: init_json["data"]["uname"].as_str().map(|s| s.to_string()),
+            avatar: None,
+            stream_url: Some(real_url.clone()),
+            status: Some(1),
+            error_message: None,
+            upstream_url: Some(real_url),
+            available_streams: Some(variants_for_response.clone()),
+            normalized_room_id: None,
+            web_rid: None,
+        }),
+        SelectedStream::Hls(real_url) => Ok(crate::platforms::common::LiveStreamInfo {
+            title: init_json["data"]["title"].as_str().map(|s| s.to_string()),
+            anchor_name: init_json["data"]["uname"].as_str().map(|s| s.to_string()),
+            avatar: None,
+            stream_url: Some(real_url.clone()),
+            status: Some(1),
+            error_message: None,
+            upstream_url: Some(real_url),
+            available_streams: Some(variants_for_response),
+            normalized_room_id: None,
+            web_rid: None,
+        }),
     }
 }

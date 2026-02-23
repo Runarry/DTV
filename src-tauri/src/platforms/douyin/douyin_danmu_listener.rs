@@ -28,7 +28,10 @@ pub async fn start_douyin_danmu_listener(
     };
 
     if let Some(tx) = previous_tx {
-        println!("[Douyin Danmaku] Sending shutdown to previous Douyin listener task for room {}.", normalized_room_id);
+        println!(
+            "[Douyin Danmaku] Sending shutdown to previous Douyin listener task for room {}.",
+            normalized_room_id
+        );
         if tx.send(()).await.is_err() {
             eprintln!("[Douyin Danmaku] Failed to send shutdown. Task might have already completed or panicked.");
         }
@@ -43,7 +46,7 @@ pub async fn start_douyin_danmu_listener(
     let app_handle_clone = app_handle.clone();
     let room_id_str_clone = normalized_room_id.clone();
 
-        tokio::spawn(async move {
+    tokio::spawn(async move {
         println!(
             "[Douyin Danmaku] Spawning listener for room: {}",
             room_id_str_clone
@@ -158,4 +161,3 @@ pub async fn stop_douyin_danmu_listener(
 
     Ok(())
 }
-

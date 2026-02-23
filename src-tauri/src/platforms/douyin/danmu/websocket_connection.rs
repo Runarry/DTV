@@ -27,7 +27,14 @@ pub async fn connect_and_manage_websocket(
     room_id: &str,
     cookie_header: &str,
     user_unique_id: &str,
-) -> Result<(SplitStream<WsStream>, Sender<WsMessage>, watch::Sender<bool>), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<
+    (
+        SplitStream<WsStream>,
+        Sender<WsMessage>,
+        watch::Sender<bool>,
+    ),
+    Box<dyn std::error::Error + Send + Sync>,
+> {
     let ws_cookie_header = cookie_header.to_string();
     let current_timestamp_ms = Utc::now().timestamp_millis();
     let first_req_ms = current_timestamp_ms - 100;

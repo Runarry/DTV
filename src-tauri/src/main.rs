@@ -2,13 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use reqwest;
-use std::panic;
 use std::collections::HashMap;
+use std::panic;
 use std::sync::{Arc, Mutex};
-use tokio::sync::oneshot;
 use tauri::Manager;
+use tokio::sync::oneshot;
 mod platforms;
 mod proxy;
+mod recording;
 use platforms::common::{DouyinDanmakuState, FollowHttpClient, HuyaDanmakuState};
 use platforms::douyin::danmu::signature::generate_douyin_ms_token;
 use platforms::douyin::fetch_douyin_partition_rooms;
@@ -144,75 +145,83 @@ fn main() {
     let follow_http_client = FollowHttpClient::new().expect("Failed to create follow http client");
 
     tauri::Builder::default()
-            .plugin(tauri_plugin_os::init())
-            .plugin(tauri_plugin_opener::init())
-            .plugin(tauri_plugin_window_state::Builder::default()
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
                 .with_state_flags(tauri_plugin_window_state::StateFlags::SIZE)
-                .build())
-            .setup(|app| {
-                // Apply macOS vibrancy to the main window when running on macOS
-                #[cfg(target_os = "macos")]
-                {
-                    use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                    if let Some(window) = app.get_webview_window("main") {
-                        match apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None) {
-                            Ok(_) => println!("vibrancy applied successfully"),
-                            Err(e) => eprintln!("vibrancy error: {:?}", e),
-                        }
+                .build(),
+        )
+        .setup(|app| {
+            // Apply macOS vibrancy to the main window when running on macOS
+            #[cfg(target_os = "macos")]
+            {
+                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                if let Some(window) = app.get_webview_window("main") {
+                    match apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None) {
+                        Ok(_) => println!("vibrancy applied successfully"),
+                        Err(e) => eprintln!("vibrancy error: {:?}", e),
                     }
                 }
-                Ok(())
-            })
-            .manage(client) // Manage the reqwest client
-            .manage(follow_http_client) // 专用关注刷新客户端，避免占用默认连接池
-            .manage(DouyuDanmakuHandles::default()) // Manage new DouyuDanmakuHandles
-            .manage(DouyinDanmakuState::default()) // Manage DouyinDanmakuState
-            .manage(HuyaDanmakuState::default()) // Manage HuyaDanmakuState
-            .manage(platforms::common::BilibiliDanmakuState::default()) // Manage BilibiliDanmakuState
-            .manage(proxy::ProxyServerHandle::default())
-            .manage(proxy::FlvProxySessionManager::default())
-            .manage(platforms::bilibili::state::BilibiliState::default())
-            .invoke_handler(tauri::generate_handler![
-                get_stream_url_cmd,
-                get_stream_url_with_quality_cmd,
-                search_anchor,
-                start_danmaku_listener,      // Douyu danmaku start
-                stop_danmaku_listener,       // Douyu danmaku stop
-                start_douyin_danmu_listener, // Added Douyin danmaku listener command
-                stop_douyin_danmu_listener,  // Added Douyin danmaku stop command
-                start_huya_danmaku_listener, // Added Huya danmaku listener command
-                stop_huya_danmaku_listener,  // Added Huya danmaku stop command
-                platforms::bilibili::danmaku::start_bilibili_danmaku_listener,
-                platforms::bilibili::danmaku::stop_bilibili_danmaku_listener,
-                proxy::start_proxy,
-                proxy::stop_proxy,
-                proxy::start_flv_proxy_session,
-                proxy::stop_flv_proxy_session,
-                proxy::stop_all_flv_proxy_sessions,
-                proxy::start_static_proxy_server,
-                fetch_categories,
-                fetch_live_list,
-                fetch_live_list_for_cate3,
-                fetch_douyu_room_info,
-                fetch_three_cate,
-                generate_douyin_ms_token,
-                fetch_douyin_partition_rooms,
-                get_douyin_live_stream_url,
-                get_douyin_live_stream_url_with_quality,
-                fetch_douyin_room_info,
-                fetch_douyin_streamer_info,
-                fetch_huya_live_list,
-                platforms::huya::danmaku::fetch_huya_join_params,
-                platforms::huya::stream_url::get_huya_unified_cmd,
-                platforms::bilibili::state::generate_bilibili_w_webid,
-                platforms::bilibili::live_list::fetch_bilibili_live_list,
-                platforms::bilibili::stream_url::get_bilibili_live_stream_url_with_quality,
-                platforms::bilibili::streamer_info::fetch_bilibili_streamer_info,
-                platforms::bilibili::cookie::get_bilibili_cookie,
-                platforms::bilibili::cookie::bootstrap_bilibili_cookie,
-                platforms::bilibili::search::search_bilibili_rooms,
-                platforms::huya::search::search_huya_anchors,
-            ])
-            .run(tauri::generate_context!())
-            .expect("error while running tauri application");
+            }
+            Ok(())
+        })
+        .manage(client) // Manage the reqwest client
+        .manage(follow_http_client) // 专用关注刷新客户端，避免占用默认连接池
+        .manage(DouyuDanmakuHandles::default()) // Manage new DouyuDanmakuHandles
+        .manage(DouyinDanmakuState::default()) // Manage DouyinDanmakuState
+        .manage(HuyaDanmakuState::default()) // Manage HuyaDanmakuState
+        .manage(platforms::common::BilibiliDanmakuState::default()) // Manage BilibiliDanmakuState
+        .manage(proxy::ProxyServerHandle::default())
+        .manage(proxy::FlvProxySessionManager::default())
+        .manage(recording::RecordingManager::default())
+        .manage(platforms::bilibili::state::BilibiliState::default())
+        .invoke_handler(tauri::generate_handler![
+            get_stream_url_cmd,
+            get_stream_url_with_quality_cmd,
+            search_anchor,
+            start_danmaku_listener,      // Douyu danmaku start
+            stop_danmaku_listener,       // Douyu danmaku stop
+            start_douyin_danmu_listener, // Added Douyin danmaku listener command
+            stop_douyin_danmu_listener,  // Added Douyin danmaku stop command
+            start_huya_danmaku_listener, // Added Huya danmaku listener command
+            stop_huya_danmaku_listener,  // Added Huya danmaku stop command
+            platforms::bilibili::danmaku::start_bilibili_danmaku_listener,
+            platforms::bilibili::danmaku::stop_bilibili_danmaku_listener,
+            proxy::start_proxy,
+            proxy::stop_proxy,
+            proxy::start_flv_proxy_session,
+            proxy::stop_flv_proxy_session,
+            proxy::stop_all_flv_proxy_sessions,
+            proxy::start_static_proxy_server,
+            recording::start_live_recording,
+            recording::stop_live_recording,
+            recording::stop_all_live_recordings,
+            recording::list_live_recordings,
+            recording::get_recording_output_dir_default,
+            fetch_categories,
+            fetch_live_list,
+            fetch_live_list_for_cate3,
+            fetch_douyu_room_info,
+            fetch_three_cate,
+            generate_douyin_ms_token,
+            fetch_douyin_partition_rooms,
+            get_douyin_live_stream_url,
+            get_douyin_live_stream_url_with_quality,
+            fetch_douyin_room_info,
+            fetch_douyin_streamer_info,
+            fetch_huya_live_list,
+            platforms::huya::danmaku::fetch_huya_join_params,
+            platforms::huya::stream_url::get_huya_unified_cmd,
+            platforms::bilibili::state::generate_bilibili_w_webid,
+            platforms::bilibili::live_list::fetch_bilibili_live_list,
+            platforms::bilibili::stream_url::get_bilibili_live_stream_url_with_quality,
+            platforms::bilibili::streamer_info::fetch_bilibili_streamer_info,
+            platforms::bilibili::cookie::get_bilibili_cookie,
+            platforms::bilibili::cookie::bootstrap_bilibili_cookie,
+            platforms::bilibili::search::search_bilibili_rooms,
+            platforms::huya::search::search_huya_anchors,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

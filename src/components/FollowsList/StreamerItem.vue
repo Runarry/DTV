@@ -33,6 +33,14 @@
         <span class="badge-text">{{ platformLabel(streamer.platform) }}</span>
       </div>
       <div v-else class="live-indicator" :class="getLiveIndicatorClass(streamer)"></div>
+      <button
+        class="record-toggle-btn"
+        :class="{ 'is-active': isRecordingActive, 'is-pending': isRecordingPending }"
+        :title="recordButtonTitle"
+        @click.stop="toggleRecording"
+      >
+        <span class="record-dot"></span>
+      </button>
     </div>
   </div>
 </template>
@@ -186,6 +194,7 @@
 .status-container {
   display: flex;
   align-items: center;
+  gap: 8px;
   margin-left: auto;
   flex: 0 0 auto;
   padding-right: 6px;
@@ -220,12 +229,60 @@
 .live-indicator.is-replay { background: #f59e0b; box-shadow: none; }
 .live-indicator.is-offline { background: var(--border-color); }
 :root[data-theme="light"] .live-indicator.is-offline { background: #9ca3af; }
+
+.record-toggle-btn {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.record-toggle-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.record-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.8);
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.record-toggle-btn.is-active {
+  border-color: rgba(248, 113, 113, 0.8);
+  background: rgba(127, 29, 29, 0.3);
+}
+
+.record-toggle-btn.is-active .record-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.75);
+}
+
+.record-toggle-btn.is-pending .record-dot {
+  animation: rec-pulse 1.2s infinite;
+}
+
+@keyframes rec-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.7); opacity: 0.55; }
+  100% { transform: scale(1); opacity: 1; }
+}
 </style>
 
 <script setup lang="ts">
 import { Platform } from '../../platforms/common/types';
 import type { FollowedStreamer } from '../../platforms/common/types';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRecordingStore } from '../../stores/recording';
 
 const props = defineProps<{
   streamer: FollowedStreamer,
@@ -240,6 +297,7 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'clickItem', s: FollowedStreamer): void }>();
 
 const onClick = () => emit('clickItem', props.streamer);
+const recordingStore = useRecordingStore();
 
 const canLoadAvatar = computed(() => {
   return !!props.streamer.avatarUrl && (props.streamer.platform !== Platform.BILIBILI || !!props.proxyBase);
@@ -280,7 +338,10 @@ const setupAvatarObserver = () => {
   }
 };
 
-onMounted(setupAvatarObserver);
+onMounted(() => {
+  void recordingStore.initialize();
+  setupAvatarObserver();
+});
 watch(canLoadAvatar, setupAvatarObserver);
 onUnmounted(() => avatarObserver?.disconnect());
 
@@ -298,4 +359,41 @@ const showPlatform = computed(() => !!props.showPlatform);
 
 const shouldLoadAvatar = computed(() => canLoadAvatar.value && isAvatarVisible.value);
 const avatarSrc = computed(() => (shouldLoadAvatar.value ? props.getAvatarSrc(props.streamer) : ''));
+
+const recordingTask = computed(() => recordingStore.findTaskByRoom(props.streamer.platform, props.streamer.id));
+const isRecordingActive = computed(() => {
+  const status = String(recordingTask.value?.status || '');
+  return status === 'recording' || status === 'reconnecting';
+});
+const isRecordingPending = computed(() => String(recordingTask.value?.status || '') === 'starting');
+const recordButtonTitle = computed(() => {
+  if (isRecordingActive.value || isRecordingPending.value) {
+    return '停止后台录制';
+  }
+  return '后台录制';
+});
+
+const toggleRecording = async () => {
+  try {
+    if (isRecordingActive.value || isRecordingPending.value) {
+      await recordingStore.stopRecordingByRoom(props.streamer.platform, props.streamer.id);
+      return;
+    }
+    const cookie = props.streamer.platform === Platform.BILIBILI && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('bilibili_cookie')
+      : null;
+    await recordingStore.startRecording({
+      platform: props.streamer.platform,
+      roomId: props.streamer.id,
+      quality: '原画',
+      cookie,
+      segmentMinutes: 30,
+    });
+    if (recordingStore.activeTasks.length > 4) {
+      console.warn('[Recording] 当前后台录制任务较多，可能增加带宽和磁盘写入压力。');
+    }
+  } catch (error) {
+    console.error('[StreamerItem] toggleRecording failed:', error);
+  }
+};
 </script>

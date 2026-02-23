@@ -4,6 +4,7 @@ import App from './App.vue';
 import router from './router';
 import { useFollowStore } from './store/followStore'; 
 import { useThemeStore } from './stores/theme';
+import { useRecordingStore } from './stores/recording';
 import { check } from '@tauri-apps/plugin-updater';
 
 const app = createApp(App);
@@ -26,6 +27,9 @@ try {
 } catch (error) {
   console.error('[main.ts] Error initializing theme store:', error);
 }
+
+const recordingStore = useRecordingStore();
+void recordingStore.initialize();
 
 const maybeCheckForUpdates = async () => {
   if (import.meta.env.DEV) return;

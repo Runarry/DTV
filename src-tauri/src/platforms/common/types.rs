@@ -62,22 +62,30 @@ pub struct LiveStreamInfo {
 // State for the Douyin Danmaku listener
 #[derive(Default)]
 #[allow(dead_code)]
-pub struct DouyinDanmakuState(pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>);
+pub struct DouyinDanmakuState(
+    pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>,
+);
 
 // State for the Bilibili Danmaku listener
 #[derive(Default)]
 #[allow(dead_code)]
-pub struct BilibiliDanmakuState(pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>);
+pub struct BilibiliDanmakuState(
+    pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>,
+);
 
 // State for the Douyu Danmaku listener
 #[derive(Default)]
 #[allow(dead_code)]
-pub struct DouyuDanmakuState(pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>);
+pub struct DouyuDanmakuState(
+    pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>,
+);
 
 // State for the Huya Danmaku listener
 #[derive(Default)]
 #[allow(dead_code)]
-pub struct HuyaDanmakuState(pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>);
+pub struct HuyaDanmakuState(
+    pub std::sync::Mutex<std::collections::HashMap<String, tokio::sync::mpsc::Sender<()>>>,
+);
 
 #[derive(Serialize, Clone, Debug, specta::Type)]
 pub struct DanmakuFrontendPayload {

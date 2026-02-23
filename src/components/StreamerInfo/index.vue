@@ -45,6 +45,15 @@
         </div>
   
         <div class="streamer-actions">
+          <button
+            class="record-btn"
+            :class="{ 'is-recording': isRecording, 'is-pending': isRecordingPending }"
+            :title="recordButtonTitle"
+            @click="toggleRecording"
+          >
+            <span class="record-btn-dot"></span>
+            <span class="record-btn-text">{{ recordButtonText }}</span>
+          </button>
           <div class="id-follow-container" ref="idFollowContainerRef" :class="{ 'highlight-moves-to-id': isFollowing }">
             <span class="streamer-id" ref="streamerIdRef" :class="{ 'text-active-on-highlight': isFollowing }">ID:{{ props.roomId }}</span>
             <button class="follow-btn" ref="followBtnRef" :class="{ 'text-active-on-highlight': !isFollowing, 'is-following': isFollowing }" @click="toggleFollow">
@@ -240,9 +249,58 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 10px;
     margin-left: auto;
     flex-shrink: 0;
   }
+
+.record-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(226, 232, 240, 0.92);
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.record-btn:hover {
+  border-color: rgba(248, 113, 113, 0.7);
+  transform: translateY(-1px);
+}
+
+.record-btn-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.85);
+}
+
+.record-btn.is-recording {
+  border-color: rgba(248, 113, 113, 0.78);
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.record-btn.is-recording .record-btn-dot {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.78);
+}
+
+.record-btn.is-pending .record-btn-dot {
+  animation: recordPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.7); opacity: 0.55; }
+  100% { transform: scale(1); opacity: 1; }
+}
   
 .id-follow-container {
   display: flex;
@@ -502,6 +560,18 @@
     box-shadow: 0 14px 24px rgba(15, 23, 42, 0.1);
   }
 
+  :root[data-theme="light"] .record-btn {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(189, 200, 224, 0.78);
+    color: rgba(51, 65, 85, 0.96);
+  }
+
+  :root[data-theme="light"] .record-btn.is-recording {
+    background: rgba(254, 226, 226, 0.92);
+    border-color: rgba(248, 113, 113, 0.68);
+    color: rgba(153, 27, 27, 0.94);
+  }
+
   :root[data-theme="light"] .id-follow-container::before {
     background: rgba(132, 192, 255, 0.92);
   }
@@ -586,6 +656,7 @@
     hasRequiredCookies,
     sleep,
   } from '../../platforms/bilibili/cookieHelper'
+  import { useRecordingStore } from '../../stores/recording'
 
   // Helper: normalize avatar URL (strip wrappers/backticks, fix protocol)
   const normalizeAvatarUrl = (input: string | null | undefined): string => {
@@ -630,6 +701,7 @@
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const showAvatarText = ref(false)
+  const recordingStore = useRecordingStore()
   
   const computedRoomTitle = computed(() => roomDetails.value?.roomTitle ?? props.title ?? '直播间标题加载中...')
   const computedNickname = computed(() => roomDetails.value?.nickname ?? props.anchorName ?? '主播昵称加载中...')
@@ -669,6 +741,14 @@
     }
     return count.toString()
   })
+  const recordingTask = computed(() => recordingStore.findTaskByRoom(props.platform, props.roomId))
+  const isRecording = computed(() => {
+    const status = String(recordingTask.value?.status || '')
+    return status === 'recording' || status === 'reconnecting'
+  })
+  const isRecordingPending = computed(() => String(recordingTask.value?.status || '') === 'starting')
+  const recordButtonText = computed(() => (isRecording.value || isRecordingPending.value ? '停止录制' : '后台录制'))
+  const recordButtonTitle = computed(() => (isRecording.value || isRecordingPending.value ? '停止后台录制' : '启动后台录制'))
 
   // Proxy support for Bilibili avatar images
   const proxyBase = ref<string | null>(null)
@@ -922,6 +1002,30 @@
       emit('follow', followData)
     }
   }
+
+  const toggleRecording = async () => {
+    try {
+      if (isRecording.value || isRecordingPending.value) {
+        await recordingStore.stopRecordingByRoom(props.platform, props.roomId)
+        return
+      }
+      const cookie = props.platform === Platform.BILIBILI && typeof localStorage !== 'undefined'
+        ? localStorage.getItem('bilibili_cookie')
+        : null
+      await recordingStore.startRecording({
+        platform: props.platform,
+        roomId: props.roomId,
+        quality: '原画',
+        cookie,
+        segmentMinutes: 30,
+      })
+      if (recordingStore.activeTasks.length > 4) {
+        console.warn('[Recording] 当前后台录制任务较多，可能增加带宽和磁盘写入压力。')
+      }
+    } catch (e) {
+      console.error('[StreamerInfo] toggleRecording failed:', e)
+    }
+  }
   
   const handleAvatarError = () => {
     console.warn(`[StreamerInfo] Avatar image failed to load for ${computedNickname.value} (URL: ${avatarUrl.value}). Displaying fallback.`);
@@ -961,6 +1065,7 @@
   };
   
   onMounted(() => {
+    void recordingStore.initialize()
     loadBilibiliCookieFromStorage()
     fetchRoomDetails()
     nextTick(() => {

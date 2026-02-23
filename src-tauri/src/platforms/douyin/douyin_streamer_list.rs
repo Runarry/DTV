@@ -103,10 +103,7 @@ pub async fn fetch_douyin_partition_rooms(
         HeaderValue::from_str(&cookie_string)
             .map_err(|e| format!("Failed to create cookie header value: {}", e))?,
     );
-    headers.insert(
-        USER_AGENT,
-        HeaderValue::from_static(DEFAULT_USER_AGENT),
-    );
+    headers.insert(USER_AGENT, HeaderValue::from_static(DEFAULT_USER_AGENT));
 
     let params: Vec<(String, String)> = vec![
         ("aid".to_string(), "6383".to_string()),

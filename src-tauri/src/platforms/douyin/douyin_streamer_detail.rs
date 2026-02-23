@@ -37,7 +37,14 @@ pub async fn get_douyin_live_stream_url_with_quality(
     payload: GetStreamUrlPayload,
     quality: String,
 ) -> Result<CommonLiveStreamInfo, String> {
-    let requested_id = payload.args.room_id_str.trim().to_string();
+    fetch_douyin_live_stream_info_by_quality(&payload.args.room_id_str, &quality).await
+}
+
+pub async fn fetch_douyin_live_stream_info_by_quality(
+    requested_room_id: &str,
+    quality: &str,
+) -> Result<CommonLiveStreamInfo, String> {
+    let requested_id = requested_room_id.trim().to_string();
     if requested_id.is_empty() {
         return Ok(CommonLiveStreamInfo {
             title: None,
@@ -252,8 +259,7 @@ fn pick_douyin_flv_by_quality(
         .and_then(|v| v.get("flv_pull_url"))
         .and_then(|v| v.as_object())?;
 
-    let origin_url = origin_override
-        .or_else(|| flv_map.get("ORIGIN").and_then(|v| v.as_str()));
+    let origin_url = origin_override.or_else(|| flv_map.get("ORIGIN").and_then(|v| v.as_str()));
     let full_hd1 = flv_map.get("FULL_HD1").and_then(|v| v.as_str());
     let hd1 = flv_map.get("HD1").and_then(|v| v.as_str());
     let sd_fallback = flv_map
@@ -265,9 +271,7 @@ fn pick_douyin_flv_by_quality(
         QUALITY_OD => origin_url
             .map(|u| ("ORIGIN".to_string(), u.to_string()))
             .or_else(|| full_hd1.map(|u| ("FULL_HD1".to_string(), u.to_string()))),
-        QUALITY_UHD => {
-            full_hd1.map(|u| ("FULL_HD1".to_string(), u.to_string()))
-        }
+        QUALITY_UHD => full_hd1.map(|u| ("FULL_HD1".to_string(), u.to_string())),
         QUALITY_BD => hd1
             .map(|u| ("HD1".to_string(), u.to_string()))
             .or_else(|| sd_fallback.map(|u| ("SD1".to_string(), u.to_string()))),
@@ -289,9 +293,9 @@ fn insert_origin_flv(room: &mut Value, origin_url: &str) {
         _ => {
             let mut new_map = serde_json::Map::new();
             new_map.insert("ORIGIN".to_string(), Value::String(origin_url.to_string()));
-            stream_url.as_object_mut().map(|obj| {
-                obj.insert("flv_pull_url".to_string(), Value::Object(new_map))
-            });
+            stream_url
+                .as_object_mut()
+                .map(|obj| obj.insert("flv_pull_url".to_string(), Value::Object(new_map)));
         }
     }
 }

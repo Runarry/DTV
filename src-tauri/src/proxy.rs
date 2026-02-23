@@ -170,7 +170,10 @@ async fn proxy_flv_stream(client: &Client, url: String) -> HttpResponse {
         return HttpResponse::BadRequest().body("Missing upstream url");
     }
 
-    println!("[Rust/proxy.rs handler] Incoming FLV proxy request -> {}", url);
+    println!(
+        "[Rust/proxy.rs handler] Incoming FLV proxy request -> {}",
+        url
+    );
 
     let mut req = client
         .get(&url.clone())
@@ -298,7 +301,9 @@ pub async fn start_flv_proxy_session(
         .addrs()
         .first()
         .map(|addr| addr.port())
-        .ok_or_else(|| "[Rust/proxy.rs] Failed to resolve bound address for FLV session".to_string())?;
+        .ok_or_else(|| {
+            "[Rust/proxy.rs] Failed to resolve bound address for FLV session".to_string()
+        })?;
     let runtime_port = port;
 
     let server = server_builder.run();
@@ -322,11 +327,7 @@ pub async fn start_flv_proxy_session(
         if let Err(e) = server.await {
             eprintln!(
                 "[Rust/proxy.rs] FLV session {} (platform={}, room={:?}, port={}) run error: {}",
-                runtime_session_id,
-                runtime_platform,
-                runtime_room_id,
-                runtime_port,
-                e
+                runtime_session_id, runtime_platform, runtime_room_id, runtime_port, e
             );
         } else {
             println!(
@@ -373,7 +374,10 @@ pub async fn stop_all_flv_proxy_sessions(
 ) -> Result<(), String> {
     let sessions = {
         let mut guard = session_manager.0.lock().unwrap();
-        guard.drain().map(|(_, session)| session).collect::<Vec<_>>()
+        guard
+            .drain()
+            .map(|(_, session)| session)
+            .collect::<Vec<_>>()
     };
 
     for session in sessions {
@@ -440,9 +444,7 @@ pub async fn start_proxy(
 }
 
 #[tauri::command]
-pub async fn start_static_proxy_server(
-    _app_handle: AppHandle,
-) -> Result<String, String> {
+pub async fn start_static_proxy_server(_app_handle: AppHandle) -> Result<String, String> {
     // Use a dedicated port for static image proxy to avoid interfering with FLV stream proxy
     let port: u16 = 34721;
 

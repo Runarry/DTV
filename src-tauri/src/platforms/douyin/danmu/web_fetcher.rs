@@ -318,7 +318,10 @@ impl DouyinLiveWebFetcher {
         }
 
         let mut headers = HeaderMap::new();
-        headers.insert(ACCEPT, HeaderValue::from_static("application/json, text/plain, */*"));
+        headers.insert(
+            ACCEPT,
+            HeaderValue::from_static("application/json, text/plain, */*"),
+        );
         headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("zh-CN,zh;q=0.9"));
         headers.insert(
             REFERER,

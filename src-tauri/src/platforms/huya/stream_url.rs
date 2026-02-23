@@ -16,7 +16,8 @@ use tauri::State;
 use crate::platforms::common::FollowHttpClient;
 
 const IOS_MOBILE_UA: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1";
-const DESKTOP_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0";
+const DESKTOP_UA: &str =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0";
 
 #[derive(Clone, Debug, Serialize)]
 #[allow(non_snake_case)]
@@ -292,12 +293,11 @@ async fn fetch_web_stream_data_with_headers(
         headers.insert(USER_AGENT, HeaderValue::from_static(IOS_MOBILE_UA));
         headers.insert(
             ACCEPT,
-            HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+            HeaderValue::from_static(
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            ),
         );
-        headers.insert(
-            REFERER,
-            HeaderValue::from_static("https://m.huya.com/"),
-        );
+        headers.insert(REFERER, HeaderValue::from_static("https://m.huya.com/"));
     } else {
         headers.insert(USER_AGENT, HeaderValue::from_static(DESKTOP_UA));
         headers.insert(
@@ -306,10 +306,7 @@ async fn fetch_web_stream_data_with_headers(
                 "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             ),
         );
-        headers.insert(
-            REFERER,
-            HeaderValue::from_static("https://www.huya.com/"),
-        );
+        headers.insert(REFERER, HeaderValue::from_static("https://www.huya.com/"));
     }
     headers.insert(
         ACCEPT_LANGUAGE,
@@ -571,18 +568,33 @@ pub async fn get_huya_unified_cmd(
     line: Option<String>,
     follow_http: State<'_, FollowHttpClient>,
 ) -> Result<HuyaUnifiedResponse, String> {
-    let client = &follow_http.0.inner;
+    get_huya_unified_with_client(
+        &follow_http.0.inner,
+        &room_id,
+        quality.as_deref(),
+        line.as_deref(),
+    )
+    .await
+}
 
-    let detail = fetch_room_detail(client, &room_id)
+pub async fn get_huya_unified_with_client(
+    client: &reqwest::Client,
+    room_id: &str,
+    quality: Option<&str>,
+    line: Option<&str>,
+) -> Result<HuyaUnifiedResponse, String> {
+    let room_id_owned = room_id.to_string();
+
+    let detail = fetch_room_detail(client, &room_id_owned)
         .await
         .map_err(|e| e.to_string())?;
 
-    let web_stream = fetch_web_stream_data(client, &room_id)
+    let web_stream = fetch_web_stream_data(client, &room_id_owned)
         .await
         .map_err(|e| e.to_string())?;
 
-    let ratio = resolve_ratio(quality.as_deref());
-    let preferred_line = normalize_huya_line(line.as_deref());
+    let ratio = resolve_ratio(quality);
+    let preferred_line = normalize_huya_line(line);
     let selection = pick_stream_url(&web_stream.candidates, ratio, preferred_line.as_deref());
     let (selected_url, selected_index) = match selection {
         Some(value) => value,

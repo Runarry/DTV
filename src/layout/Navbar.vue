@@ -313,6 +313,7 @@ import type { Platform as UiPlatform } from './types';
 import { useFollowStore } from '../store/followStore';
 import { useCustomCategoryStore } from '../store/customCategoryStore';
 import { useMultiRoomStore } from '../stores/multiRoom';
+import { useNavigationStore } from '../stores/navigationStore';
 
 interface DouyinApiStreamInfo {
   title?: string | null;
@@ -417,6 +418,7 @@ const effectiveTheme = computed(() => themeStore.getEffectiveTheme());
 const route = useRoute();
 const router = useRouter();
 const multiRoomStore = useMultiRoomStore();
+const navigationStore = useNavigationStore();
 
 const detectedPlatform = ref<string | null>(null);
 const isMacPreview = false;
@@ -551,6 +553,12 @@ const currentPlatform = computed<Platform>(() => {
   const path = route.path;
 
   if (name) {
+    if (name === 'multiPlayer') {
+      if (navigationStore.sourcePlatform === 'douyin') return Platform.DOUYIN;
+      if (navigationStore.sourcePlatform === 'huya') return Platform.HUYA;
+      if (navigationStore.sourcePlatform === 'bilibili') return Platform.BILIBILI;
+      return Platform.DOUYU;
+    }
     if (name === 'douyinPlayer' || name === 'DouyinHome') return Platform.DOUYIN;
     if (name === 'huyaPlayer' || name === 'HuyaHome') return Platform.HUYA;
     if (name === 'bilibiliPlayer' || name === 'BilibiliHome') return Platform.BILIBILI;

@@ -274,6 +274,7 @@ watch(selectedCate2Id, (newVal) => {
 // 导出一些方法供父组件使用
 defineExpose({
   cate1List,
+  cate2List,
   sortedCate2List,
   currentCate3List,
   selectedCate1Id,

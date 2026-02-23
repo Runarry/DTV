@@ -2,9 +2,10 @@
   <div class="douyin-home">
     <div class="douyin-content">
       <div class="left-panel">
-        <CommonCategory 
+        <CommonCategory
           :categoriesData="categoriesData"
-          @category-selected="onCategorySelected" 
+          :selected-category-href="selectedCategory?.cate2Href"
+          @category-selected="onCategorySelected"
         >
           <template #actions>
             <button
@@ -20,6 +21,7 @@
       </div>
       <div class="right-panel">
         <CommonStreamerList
+          ref="streamerListRef"
           :selectedCategory="selectedCategory"
           :categoriesData="categoriesData"
           platformName="douyin"
@@ -31,12 +33,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onActivated, onDeactivated, nextTick } from 'vue'
 import CommonCategory from '../components/CommonCategory/index.vue'
 import CommonStreamerList from '../components/CommonStreamerList/index.vue'
 import { douyinCategoriesData } from '../platforms/douyin/douyinCategoriesData'
 import type { CategorySelectedEvent } from '../platforms/common/categoryTypes'
 import { useCustomCategoryStore } from '../store/customCategoryStore'
+import { useNavigationStore } from '../stores/navigationStore'
 
 defineOptions({
   name: 'DouyinHomeView',
@@ -45,6 +48,8 @@ defineOptions({
 const categoriesData = douyinCategoriesData
 const selectedCategory = ref<CategorySelectedEvent | null>(null)
 const customStore = useCustomCategoryStore()
+const navigationStore = useNavigationStore()
+const streamerListRef = ref<InstanceType<typeof CommonStreamerList> | null>(null)
 customStore.ensureLoaded()
 
 const canSubscribe = computed(() => !!selectedCategory.value?.cate2Href)
@@ -72,6 +77,40 @@ const toggleSubscribe = () => {
     )
   }
 }
+
+// Save state when leaving the view
+onDeactivated(() => {
+  navigationStore.setSourcePlatform('douyin')
+
+  // Proactively save scroll position (don't rely on debounced scroll handler)
+  const scrollEl = streamerListRef.value?.getScrollElement?.()
+  if (scrollEl) {
+    navigationStore.saveScrollPosition('douyin', scrollEl.scrollTop)
+    navigationStore.persistScrollPosition('douyin')
+  }
+
+  if (selectedCategory.value) {
+    navigationStore.saveCategoryState('douyin', {
+      cate2Href: selectedCategory.value.cate2Href,
+      cate2Name: selectedCategory.value.cate2Name,
+    })
+  }
+})
+
+// Restore state when returning to the view
+onActivated(() => {
+  const savedState = navigationStore.getPlatformState('douyin')
+  if (savedState?.category && 'cate2Href' in savedState.category) {
+    selectedCategory.value = {
+      cate2Href: savedState.category.cate2Href,
+      cate2Name: savedState.category.cate2Name,
+    } as CategorySelectedEvent
+
+    nextTick(() => {
+      streamerListRef.value?.restoreScrollPosition(savedState.scrollPosition)
+    })
+  }
+})
 </script>
 
 <style scoped>

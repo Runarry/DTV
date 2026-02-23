@@ -2,7 +2,8 @@
   <div class="home-page">
     <!-- 分类区域 -->
     <div class="category-section" ref="categorySectionRef">
-      <CategoryList 
+      <CategoryList
+        ref="categoryListRef"
         @category-selected="handleCategorySelected"
       >
         <template #actions>
@@ -18,11 +19,12 @@
       </CategoryList>
     </div>
     <!-- 主播列表区域 -->
-    <div 
-      class="live-list-section" 
+    <div
+      class="live-list-section"
       v-if="selectedCategoryInfo"
     >
       <CommonStreamerList
+        ref="streamerListRef"
         :douyu-category="selectedCategoryInfo"
         platformName="douyu"
         playerRouteName="douyuPlayer"
@@ -40,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onActivated, onDeactivated, nextTick } from 'vue'
 
 // Added for KeepAlive include by name
 defineOptions({
@@ -48,10 +50,11 @@ defineOptions({
 })
 
 import CategoryList from '../components/DouyuCategory/index.vue';
-import CommonStreamerList from '../components/CommonStreamerList/index.vue'; 
+import CommonStreamerList from '../components/CommonStreamerList/index.vue';
 import { invoke } from '@tauri-apps/api/core'
 import type { CategorySelectedEvent } from '../components/DouyuCategory/types';
 import { useCustomCategoryStore } from '../store/customCategoryStore'
+import { useNavigationStore } from '../stores/navigationStore'
 
 // Types for the data structure returned by the Rust command `fetch_categories`
 interface FrontendCate3Item {
@@ -81,12 +84,16 @@ interface SelectedCategoryInfo {
   type: 'cate2' | 'cate3';
   id: string; // shortName for cate2, cate3Id for cate3
   name?: string; // cate2Name or cate3Name
+  parentCate2Id?: string; // shortName for parent cate2 (required for cate3 restore)
 }
 
 const selectedCategoryInfo = ref<SelectedCategoryInfo | null>(null);
 const categorySectionRef = ref<HTMLElement | null>(null)
+const categoryListRef = ref<InstanceType<typeof CategoryList> | null>(null)
 const isLoadingDefaultCategory = ref(true);
 const customStore = useCustomCategoryStore()
+const navigationStore = useNavigationStore()
+const streamerListRef = ref<InstanceType<typeof CommonStreamerList> | null>(null)
 customStore.ensureLoaded()
 
 const canSubscribe = computed(() => selectedCategoryInfo.value?.type === 'cate2' && !!selectedCategoryInfo.value?.id)
@@ -100,13 +107,15 @@ const handleCategorySelected = (event: CategorySelectedEvent) => {
     selectedCategoryInfo.value = {
       type: 'cate2',
       id: event.shortName,
-      name: event.cate2Name || event.shortName
+      name: event.cate2Name || event.shortName,
+      parentCate2Id: event.shortName,
     };
   } else if (event.type === 'cate3' && event.cate3Id) {
     selectedCategoryInfo.value = {
       type: 'cate3',
       id: event.cate3Id,
-      name: event.cate3Name || undefined
+      name: event.cate3Name || undefined,
+      parentCate2Id: event.shortName,
     };
   } else {
     console.warn('Received category selection event with missing/invalid data:', event);
@@ -160,8 +169,148 @@ const fetchDefaultCategory = async () => {
   }
 }
 
+const sleep = (ms: number) => new Promise<void>((resolve) => {
+  setTimeout(resolve, ms)
+})
+
+const waitForCategoryListReady = async (timeoutMs = 3000) => {
+  const startAt = Date.now()
+  while (Date.now() - startAt < timeoutMs) {
+    const categoryList = categoryListRef.value as any
+    if (categoryList && Array.isArray(categoryList.cate2List) && categoryList.cate2List.length > 0) {
+      return categoryList
+    }
+    await nextTick()
+    await sleep(60)
+  }
+  return null
+}
+
+const findCate3WithRetry = async (categoryList: any, cate3Id: string) => {
+  for (let i = 0; i < 20; i += 1) {
+    const currentCate3List = Array.isArray(categoryList.currentCate3List) ? categoryList.currentCate3List : []
+    const cate3 = currentCate3List.find((c: any) => String(c.id) === cate3Id)
+    if (cate3) return cate3
+    await sleep(60)
+  }
+  return null
+}
+
+const restoreSavedDouyuState = async () => {
+  const savedState = navigationStore.getPlatformState('douyu')
+  if (!(savedState?.category && 'douyuCategoryType' in savedState.category)) {
+    return false
+  }
+
+  const categoryList = await waitForCategoryListReady()
+  if (!categoryList) {
+    return false
+  }
+
+  const savedId = savedState.category.douyuCategoryId
+  const savedType = savedState.category.douyuCategoryType
+  const savedParentCate2Id = savedState.category.douyuParentCate2Id
+    || (savedType === 'cate2' ? savedId : undefined)
+
+  const cate2List: any[] = Array.isArray(categoryList.cate2List) ? categoryList.cate2List : []
+  const targetCate2 = cate2List.find((c) => {
+    if (savedType === 'cate2') {
+      return String(c.cate2Id) === savedId || c.shortName === savedId
+    }
+    return !!savedParentCate2Id
+      && (String(c.cate2Id) === savedParentCate2Id || c.shortName === savedParentCate2Id)
+  })
+
+  const fallbackCate2 = cate2List[0]
+  const cate2ToUse = targetCate2 || fallbackCate2
+  if (!cate2ToUse) {
+    return false
+  }
+
+  categoryList.selectCate1(cate2ToUse.cate1Id)
+  await nextTick()
+
+  const sortedCate2List: any[] = Array.isArray(categoryList.sortedCate2List) ? categoryList.sortedCate2List : []
+  const cate2InCurrentList = sortedCate2List.find((c) => c.cate2Id === cate2ToUse.cate2Id) || cate2ToUse
+  categoryList.handleCate2SelectAndCollapse(cate2InCurrentList)
+
+  let restoredAsCate3 = false
+  if (savedType === 'cate3' && targetCate2) {
+    await nextTick()
+    const cate3 = await findCate3WithRetry(categoryList, savedId)
+    if (cate3) {
+      categoryList.handleCate3Click(cate3)
+      restoredAsCate3 = true
+    }
+  }
+
+  if (!targetCate2 || (savedType === 'cate3' && !restoredAsCate3)) {
+    const fallbackId = cate2ToUse.shortName || String(cate2ToUse.cate2Id)
+    navigationStore.saveCategoryState('douyu', {
+      douyuCategoryType: 'cate2',
+      douyuCategoryId: fallbackId,
+      douyuCategoryName: cate2ToUse.cate2Name,
+      douyuParentCate2Id: fallbackId,
+    })
+  }
+
+  if (savedState.scrollPosition > 0) {
+    await nextTick()
+    setTimeout(() => {
+      streamerListRef.value?.restoreScrollPosition(savedState.scrollPosition)
+    }, 150)
+  }
+
+  return true
+}
+
 onMounted(() => {
-  fetchDefaultCategory()
+  const savedState = navigationStore.getPlatformState('douyu')
+  if (!(savedState?.category && 'douyuCategoryType' in savedState.category)) {
+    fetchDefaultCategory()
+  }
+})
+
+// Save state when leaving the view
+onDeactivated(() => {
+  navigationStore.setSourcePlatform('douyu')
+
+  // Proactively save scroll position (don't rely on debounced scroll handler)
+  const scrollEl = streamerListRef.value?.getScrollElement?.()
+  if (scrollEl) {
+    navigationStore.saveScrollPosition('douyu', scrollEl.scrollTop)
+    navigationStore.persistScrollPosition('douyu')
+  }
+
+  if (selectedCategoryInfo.value) {
+    const categoryList = categoryListRef.value
+    const activeCate2 = categoryList?.sortedCate2List.find(
+      (c: any) => c.cate2Id === categoryList.selectedCate2Id
+    )
+    const parentCate2Id = selectedCategoryInfo.value.type === 'cate2'
+      ? selectedCategoryInfo.value.id
+      : selectedCategoryInfo.value.parentCate2Id || activeCate2?.shortName
+
+    navigationStore.saveCategoryState('douyu', {
+      douyuCategoryType: selectedCategoryInfo.value.type,
+      douyuCategoryId: selectedCategoryInfo.value.id,
+      douyuCategoryName: selectedCategoryInfo.value.name,
+      douyuParentCate2Id: parentCate2Id,
+    })
+  }
+})
+
+// Restore state when returning to the view
+onActivated(async () => {
+  const savedState = navigationStore.getPlatformState('douyu')
+  if (!(savedState?.category && 'douyuCategoryType' in savedState.category)) {
+    return
+  }
+
+  const restored = await restoreSavedDouyuState()
+  if (!restored && !selectedCategoryInfo.value) {
+    await fetchDefaultCategory()
+  }
 })
 </script>
 

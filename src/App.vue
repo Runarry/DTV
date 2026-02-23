@@ -55,6 +55,7 @@ import type { Platform as UiPlatform } from './layout/types';
 import { useThemeStore } from './stores/theme';
 import { useFollowStore } from './store/followStore';
 import { useMultiRoomStore } from './stores/multiRoom';
+import { useNavigationStore } from './stores/navigationStore';
 import { Platform } from './platforms/common/types';
 import type { FollowedStreamer } from './platforms/common/types';
 import './styles/global.css';
@@ -63,6 +64,8 @@ const router = useRouter();
 const route = useRoute();
 const followStore = useFollowStore();
 const multiRoomStore = useMultiRoomStore();
+const navigationStore = useNavigationStore();
+navigationStore.loadFromStorage();
 
 const isSidebarCollapsed = ref(false);
 const isPlayerFullscreen = ref(false);
@@ -73,6 +76,11 @@ const theme = computed(() => themeStore.getEffectiveTheme());
 const routePlatform = computed<UiPlatform>(() => {
   const name = route.name as string | undefined;
   const path = route.path;
+  if (name === 'multiPlayer') {
+    const source = navigationStore.sourcePlatform;
+    if (source === 'douyin' || source === 'huya' || source === 'bilibili') return source;
+    return 'douyu';
+  }
   if (name === 'CustomHome' || path.startsWith('/custom')) return 'custom';
   if (name === 'douyinPlayer' || name === 'DouyinHome' || path.startsWith('/douyin')) return 'douyin';
   if (name === 'huyaPlayer' || name === 'HuyaHome' || path.startsWith('/huya')) return 'huya';
@@ -104,7 +112,8 @@ watch(
   [isMultiPlayerRoute, () => multiRoomStore.roomCount],
   ([isMulti, roomCount]) => {
     if (isMulti && roomCount === 0) {
-      router.replace({ name: 'DouyuHome' });
+      const targetRoute = navigationStore.getSourcePlatformRoute();
+      router.replace(targetRoute);
     }
   },
   { immediate: true },
@@ -119,6 +128,11 @@ const toggleTheme = () => {
 };
 
 const handlePlatformChange = (platform: UiPlatform | 'all') => {
+  // When navigating from player page, the new platform becomes the source
+  if (isPlayerRoute.value && platform !== 'all' && platform !== 'custom') {
+    navigationStore.setSourcePlatform(platform as any);
+  }
+
   if (platform === 'custom') {
     router.push({ name: 'CustomHome' });
   } else if (platform === 'douyin') {

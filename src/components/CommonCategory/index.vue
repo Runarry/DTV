@@ -27,12 +27,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, onActivated } from 'vue'
+import { ref, onMounted, computed, nextTick, onActivated, watch } from 'vue'
 import Cate1List from './components/Cate1List.vue'
 import Cate2Grid from './components/Cate2Grid.vue'
 import type { Category1 as CommonCategory1, Category2 as CommonCategory2, CategorySelectedEvent } from '../../platforms/common/categoryTypes.ts'
 
-const props = defineProps<{ categoriesData: CommonCategory1[] }>()
+const props = defineProps<{
+  categoriesData: CommonCategory1[];
+  selectedCategoryHref?: string; // External control for selected cate2
+}>()
 
 const emit = defineEmits<{
   (e: 'category-selected', category: CategorySelectedEvent): void
@@ -58,6 +61,32 @@ onMounted(() => {
     emit('category-section-height-settled')
   })
 })
+
+// Watch for external category selection
+watch(() => props.selectedCategoryHref, (newHref) => {
+  if (newHref && newHref !== selectedCate2Href.value) {
+    // Find the category and its parent
+    for (const cate1 of cate1List.value) {
+      const cate2 = cate1.subcategories?.find((c: CommonCategory2) => c.href === newHref)
+      if (cate2) {
+        // Only update if different from current selection
+        if (selectedCate1Href.value !== cate1.href) {
+          selectedCate1Href.value = cate1.href
+        }
+        selectedCate2Href.value = cate2.href
+        // Emit the selection event
+        emit('category-selected', {
+          type: 'cate2',
+          cate1Href: cate1.href,
+          cate2Href: cate2.href,
+          cate1Name: cate1.title,
+          cate2Name: cate2.title,
+        })
+        break
+      }
+    }
+  }
+}, { immediate: true })
 
 const currentCate2List = computed(() => {
   if (!selectedCate1Href.value) return []

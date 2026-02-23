@@ -74,6 +74,7 @@ import { useDouyinLiveRooms } from './composables/useDouyinLiveRooms.ts'
 import { useBilibiliLiveRooms } from './composables/useBilibiliLiveRooms.ts'
 import { useDouyuLiveRooms } from './composables/useDouyuLiveRooms.ts'
 import { useMultiRoomStore } from '../../stores/multiRoom'
+import { useNavigationStore, type Platform as NavPlatform } from '../../stores/navigationStore'
 import { Platform } from '../../platforms/common/types'
 import SmoothImage from '../Common/SmoothImage.vue'
 import LoadingDots from '../Common/LoadingDots.vue'
@@ -95,6 +96,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const multiRoomStore = useMultiRoomStore();
+const navigationStore = useNavigationStore();
 const scrollComponentRef = ref<any | null>(null);
 const containerWidth = ref(0);
 const categoryHref = computed(() => props.selectedCategory?.cate2Href || null);
@@ -185,18 +187,32 @@ const itemsPerRow = computed(() => {
 
 const isScrolling = ref(false);
 let scrollStopTimer: number | null = null;
+let scrollSaveTimer: number | null = null;
 
 const handleScrollerScroll = (event: Event) => {
   const target = event.target as HTMLElement | null;
-  if (!target || !hasMore.value || isLoading.value || isLoadingMore.value) return;
-  const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 260;
-  if (nearBottom) loadMoreRooms();
+  if (!target) return;
+
+  // Existing infinite scroll logic
+  if (hasMore.value && !isLoading.value && !isLoadingMore.value) {
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 260;
+    if (nearBottom) loadMoreRooms();
+  }
+
   isScrolling.value = true;
   if (scrollStopTimer !== null) window.clearTimeout(scrollStopTimer);
   scrollStopTimer = window.setTimeout(() => {
     isScrolling.value = false;
     scrollStopTimer = null;
   }, 120);
+
+  // Debounced scroll position save
+  if (scrollSaveTimer !== null) window.clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = window.setTimeout(() => {
+    navigationStore.saveScrollPosition(platformName.value as NavPlatform, target.scrollTop);
+    navigationStore.persistScrollPosition(platformName.value as NavPlatform);
+    scrollSaveTimer = null;
+  }, 500);
 };
 
 const maybeEnsureContentFillsViewport = () => {
@@ -235,6 +251,7 @@ onBeforeUnmount(() => {
   if (resizeRaf) cancelAnimationFrame(resizeRaf);
   if (ensureTimer) window.clearTimeout(ensureTimer);
   if (scrollStopTimer !== null) window.clearTimeout(scrollStopTimer);
+  if (scrollSaveTimer !== null) window.clearTimeout(scrollSaveTimer);
 });
 
 const lastSelectionKey = ref<string | null>(null);
@@ -285,6 +302,15 @@ const platformEnumMap: Record<string, Platform> = {
   huya: Platform.HUYA,
   bilibili: Platform.BILIBILI,
 };
+
+const restoreScrollPosition = (position: number) => {
+  const el = scrollElement.value;
+  if (el && position > 0) {
+    el.scrollTop = position;
+  }
+};
+
+defineExpose({ restoreScrollPosition, getScrollElement: () => scrollElement.value });
 
 const goToPlayer = (roomId: string) => {
   if (!roomId) return;

@@ -23,6 +23,19 @@
     </div>
 
     <div class="platform-tabs-wrap" data-tauri-drag-region>
+      <button
+        v-if="props.isSidebarCollapsed"
+        type="button"
+        class="nav-icon-btn platform-sidebar-toggle-btn"
+        data-tauri-drag-region="false"
+        title="显示收藏栏"
+        aria-label="显示收藏栏"
+        @click="toggleSidebar"
+      >
+        <span>
+          <Sidebar :size="17" />
+        </span>
+      </button>
       <div class="platform-tabs" ref="platformTabsRef" data-tauri-drag-region>
         <motion.div
           class="platform-highlight"
@@ -304,7 +317,7 @@ import { platform as detectPlatform } from '@tauri-apps/plugin-os';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { getVersion } from '@tauri-apps/api/app';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronDown, Github, LayoutGrid, Moon, Search, Sun, X } from 'lucide-vue-next';
+import { ChevronDown, Github, LayoutGrid, Moon, Search, Sidebar, Sun, X } from 'lucide-vue-next';
 import { motion } from 'motion-v';
 import WindowsWindowControls from '../components/window-controls/WindowsWindowControls.vue';
 import { useThemeStore } from '../stores/theme';
@@ -360,10 +373,12 @@ const props = defineProps<{
   theme: 'light' | 'dark';
   searchQuery?: string;
   activePlatform: UiPlatform | 'all';
+  isSidebarCollapsed: boolean;
 }>();
 
 const emit = defineEmits<{
   (event: 'theme-toggle'): void;
+  (event: 'toggle-sidebar'): void;
   (event: 'search-change', value: string): void;
   (event: 'platform-change', value: UiPlatform | 'all'): void;
   (event: 'select-anchor', payload: { id: string; platform: Platform; nickname: string; avatarUrl: string | null; currentRoomId?: string }): void;
@@ -760,6 +775,10 @@ const toggleTheme = () => {
   emit('theme-toggle');
 };
 
+const toggleSidebar = () => {
+  emit('toggle-sidebar');
+};
+
 const openGithub = async () => {
   try {
     await openUrl('https://github.com/chen-zeong/DTV/releases');
@@ -1075,6 +1094,14 @@ const tryEnterRoom = (roomId: string) => {
 
 .platform-tabs-wrap {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-sidebar-toggle-btn {
+  width: 40px;
+  height: 40px;
 }
 
 .navbar-player-island {

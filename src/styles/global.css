@@ -40,6 +40,7 @@
   --radius-full: 9999px;
 
   --sidebar-width: 240px;
+  --sidebar-hidden-width: 0px;
   --sidebar-collapsed-width: 72px;
   --navbar-height: 72px;
 

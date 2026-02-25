@@ -5,6 +5,17 @@
         <UsersRound class="header-icon" aria-hidden="true" :stroke-width="1.9" />
       </h3>
       <div class="header-actions">
+          <button
+            v-if="props.showCollapseTrigger"
+            class="action-btn collapse-sidebar-btn"
+            @click="emit('toggleSidebar')"
+            title="隐藏收藏栏"
+            aria-label="隐藏收藏栏"
+          >
+            <span class="icon">
+              <Sidebar :size="16" :stroke-width="1.9" />
+            </span>
+          </button>
           <button 
             v-if="!isRefreshing"
             @click="refreshList" 
@@ -196,7 +207,7 @@ import { motion } from 'motion-v';
   import FolderContextMenu from './FolderContextMenu.vue';
   import { useImageProxy } from './useProxy';
   import { useFollowStore, type FollowListItem } from '../../store/followStore';
-  import { ListCollapse, UsersRound } from 'lucide-vue-next';
+  import { ListCollapse, Sidebar, UsersRound } from 'lucide-vue-next';
 
   const expandBtnRef = ref<HTMLButtonElement | null>(null)
   const overlayAlignTop = ref<number>(64)
@@ -207,14 +218,18 @@ import { motion } from 'motion-v';
   // Updated DouyinRoomInfo to match the Rust struct DouyinFollowListRoomInfo
   // interface DouyinRoomInfo { // This will be the type for `data` from invoke
   
-  const props = defineProps<{
-    followedAnchors: FollowedStreamer[]
-  }>();
+  const props = withDefaults(defineProps<{
+    followedAnchors: FollowedStreamer[];
+    showCollapseTrigger?: boolean;
+  }>(), {
+    showCollapseTrigger: true,
+  });
   
   const emit = defineEmits<{
     (e: 'selectAnchor', streamer: FollowedStreamer): void;
     (e: 'unfollow', payload: { platform: Platform, id: string }): void; // Ensure Platform type is used here if not already
     (e: 'reorderList', newList: FollowedStreamer[]): void;
+    (e: 'toggleSidebar'): void;
   }>();
   
   // 右键菜单状态

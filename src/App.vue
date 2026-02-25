@@ -15,7 +15,9 @@
         v-show="!shouldHidePlayerChrome"
         :theme="theme"
         :active-platform="activePlatform"
+        :is-sidebar-collapsed="isSidebarCollapsed"
         @theme-toggle="toggleTheme"
+        @toggle-sidebar="toggleSidebar"
         @platform-change="handlePlatformChange"
         @select-anchor="handleSelectAnchorFromSearch"
       />
